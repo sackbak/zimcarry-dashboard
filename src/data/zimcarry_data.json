@@ -1,0 +1,2063 @@
+{
+  "meta": {
+    "company": "ZIM CARRY",
+    "report_date": "2026-04-29",
+    "data_period": "2021~2025",
+    "currency_unit": "백만원 (millions KRW)",
+    "version": "v7",
+    "source": "DART 외감보고서 + IR 2024 + 2025~2026 공개정보"
+  },
+  "company": {
+    "name": "주식회사 짐캐리",
+    "name_en": "ZIM CARRY",
+    "ceo": "손진현",
+    "founded": "2018-08-13",
+    "biz_no": "394-86-01247",
+    "headquarters": "부산",
+    "employees_2026_02": 108,
+    "homepage": "https://zimcarry.net",
+    "industry": "생활물류 (여행짐 배송, KTX/SRT 특송, 무인보관)",
+    "subsidiary": {
+      "name": "주식회사 짐캐리파트너스",
+      "since": "2023-01",
+      "business": "호텔 하우스키핑·F&B 인력 도급",
+      "financials": "비공개 (외부 공시 없음)"
+    },
+    "investment": {
+      "rounds": [
+        {
+          "year": 2020,
+          "round": "Seed",
+          "amount_mil": 50,
+          "investors": [
+            "엔젤"
+          ]
+        },
+        {
+          "year": 2022,
+          "round": "Pre-A",
+          "amount_mil": 651,
+          "investors": [
+            "케이브릿지인베스트먼트",
+            "신용보증기금"
+          ]
+        },
+        {
+          "year": 2023,
+          "round": "Series A",
+          "amount_mil": 1900,
+          "investors": [
+            "케이브릿지",
+            "신보",
+            "코로프라",
+            "ESI"
+          ]
+        },
+        {
+          "year": 2025,
+          "round": "Series A Bridge",
+          "amount_mil": 1997,
+          "investors": [
+            "중소벤처기업진흥공단",
+            "케이넷투자파트너스"
+          ]
+        }
+      ],
+      "cumulative_capital_mil": 4617,
+      "cumulative_vc_only_mil": 1950,
+      "note": "재무제표 기준 누적 4,617백만원 = VC(약 19.5억) + 정책자금 + 창업자 출자"
+    },
+    "milestones_post_ir2024": [
+      {
+        "date": "2025-12-31",
+        "event": "SRT 동탄역 특송 서비스 정식 오픈"
+      },
+      {
+        "date": "2025-12",
+        "event": "Series A Bridge 투자 유치 (중진공+케이넷)"
+      },
+      {
+        "date": "2025",
+        "event": "대통령 표창 수상 (대한민국 일자리 지원 유공)"
+      },
+      {
+        "date": "2026-Q1",
+        "event": "인천공항 T1 매장 3개 신규 오픈 (서편/동편/공항철도)"
+      },
+      {
+        "date": "2026-상반기",
+        "event": "수서역 SRT 특송 확대 예정"
+      }
+    ],
+    "stores_total": 35,
+    "stores_domestic": 29,
+    "stores_overseas": 6
+  },
+  "financials": {
+    "years": [
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ],
+    "income_statement": {
+      "revenue": [
+        660,
+        1836,
+        3736,
+        5925,
+        7619
+      ],
+      "merchandise_rev": [
+        0,
+        23,
+        892,
+        4,
+        1
+      ],
+      "rental_income": [
+        0,
+        0,
+        0,
+        22,
+        23
+      ],
+      "service_rev": [
+        660,
+        1813,
+        2844,
+        5899,
+        7595
+      ],
+      "cogs": [
+        0,
+        18,
+        2,
+        4,
+        0
+      ],
+      "gross_profit": [
+        660,
+        1818,
+        3734,
+        5921,
+        7619
+      ],
+      "sga": [
+        697,
+        1752,
+        4979,
+        6784,
+        8234
+      ],
+      "salary_total": [
+        261,
+        717,
+        2866,
+        3987,
+        4572
+      ],
+      "rent": [
+        228,
+        481,
+        1121,
+        1479,
+        1698
+      ],
+      "fees_total": [
+        25,
+        71,
+        355,
+        502,
+        791
+      ],
+      "transport": [
+        0,
+        5,
+        34,
+        145,
+        252
+      ],
+      "operating_income": [
+        -37,
+        66,
+        -1245,
+        -864,
+        -615
+      ],
+      "interest_expense": [
+        18,
+        20,
+        41,
+        45,
+        60
+      ],
+      "non_op_income": [
+        17,
+        42,
+        24,
+        37,
+        75
+      ],
+      "non_op_expense": [
+        19,
+        21,
+        72,
+        56,
+        99
+      ],
+      "net_income": [
+        -39,
+        108,
+        -1293,
+        -882,
+        -639
+      ]
+    },
+    "balance_sheet": {
+      "total_assets": [
+        707,
+        1404,
+        2826,
+        2122,
+        3355
+      ],
+      "current_assets": [
+        205,
+        979,
+        1547,
+        480,
+        1327
+      ],
+      "cash": [
+        110,
+        887,
+        1265,
+        186,
+        1012
+      ],
+      "ar": [
+        8,
+        31,
+        132,
+        163,
+        209
+      ],
+      "non_current": [
+        502,
+        426,
+        1279,
+        1642,
+        2027
+      ],
+      "tangible": [
+        353,
+        254,
+        898,
+        673,
+        331
+      ],
+      "intangible": [
+        34,
+        48,
+        100,
+        628,
+        1012
+      ],
+      "deposits": [
+        115,
+        123,
+        281,
+        341,
+        551
+      ],
+      "total_liab": [
+        743,
+        683,
+        1500,
+        2103,
+        2559
+      ],
+      "current_liab": [
+        153,
+        200,
+        1437,
+        2063,
+        2330
+      ],
+      "short_borrow": [
+        51,
+        0,
+        900,
+        1307,
+        1420
+      ],
+      "accrued_exp": [
+        44,
+        92,
+        313,
+        504,
+        648
+      ],
+      "non_current_liab": [
+        590,
+        483,
+        64,
+        40,
+        229
+      ],
+      "long_borrow": [
+        590,
+        483,
+        64,
+        31,
+        150
+      ],
+      "total_equity": [
+        -36,
+        721,
+        1326,
+        19,
+        795
+      ],
+      "capital_stock": [
+        22,
+        23,
+        518,
+        518,
+        573
+      ],
+      "common_stock": [
+        22,
+        23,
+        402,
+        402,
+        402
+      ],
+      "preferred_stock": [
+        0,
+        0,
+        116,
+        116,
+        170
+      ],
+      "capital_surplus": [
+        48,
+        697,
+        2102,
+        2102,
+        4044
+      ],
+      "retained_earnings": [
+        -105,
+        3,
+        -1290,
+        -2598,
+        -3819
+      ]
+    },
+    "investment_analysis": {
+      "cumulative_inv": [
+        70,
+        721,
+        2620,
+        2620,
+        4617
+      ],
+      "annual_raised": [
+        null,
+        651,
+        1900,
+        0,
+        1997
+      ],
+      "round_label": [
+        "창업초기",
+        "Pre-A",
+        "Series A",
+        "(증자없음)",
+        "Series A Bridge"
+      ]
+    },
+    "cash_flow": {
+      "ebitda": [
+        null,
+        244,
+        -1245,
+        -864,
+        -377
+      ],
+      "ebitda_margin": [
+        null,
+        0.133,
+        -0.333,
+        -0.146,
+        -0.049
+      ],
+      "ocf": [
+        null,
+        286,
+        -1097,
+        -653,
+        -333
+      ],
+      "capex": [
+        null,
+        null,
+        696,
+        302,
+        414
+      ],
+      "fcf": [
+        null,
+        null,
+        -1793,
+        -955,
+        -748
+      ],
+      "fcf_margin": [
+        null,
+        null,
+        -0.48,
+        -0.161,
+        -0.098
+      ],
+      "interest_coverage": [
+        -2.05,
+        3.3,
+        -30.71,
+        -19.15,
+        -10.24
+      ],
+      "runway_months": [
+        null,
+        null,
+        8.5,
+        2.3,
+        16.2
+      ],
+      "total_debt": [
+        641,
+        483,
+        964,
+        1337,
+        1570
+      ]
+    }
+  },
+  "ratios": {
+    "growth": {
+      "revenue_yoy": [
+        null,
+        1.78,
+        1.04,
+        0.59,
+        0.286
+      ],
+      "revenue_5y_multiple": 11.54,
+      "asset_yoy": [
+        null,
+        0.985,
+        1.013,
+        -0.249,
+        0.581
+      ],
+      "cagr_3y": 0.606
+    },
+    "profitability": {
+      "gross_margin": [
+        1.0,
+        0.99,
+        1.0,
+        0.999,
+        1.0
+      ],
+      "operating_margin": [
+        -0.056,
+        0.036,
+        -0.333,
+        -0.146,
+        -0.081
+      ],
+      "ebitda_margin": [
+        null,
+        0.133,
+        -0.333,
+        -0.146,
+        -0.049
+      ],
+      "net_margin": [
+        -0.059,
+        0.059,
+        -0.346,
+        -0.149,
+        -0.084
+      ],
+      "sga_ratio": [
+        1.056,
+        0.954,
+        1.333,
+        1.145,
+        1.081
+      ],
+      "personnel_ratio": [
+        0.395,
+        0.391,
+        0.767,
+        0.673,
+        0.6
+      ],
+      "rent_ratio": [
+        0.345,
+        0.262,
+        0.3,
+        0.25,
+        0.223
+      ]
+    },
+    "stability": {
+      "current_ratio": [
+        1.341,
+        4.896,
+        1.077,
+        0.233,
+        0.57
+      ],
+      "quick_ratio": [
+        0.774,
+        4.59,
+        0.972,
+        0.169,
+        0.524
+      ],
+      "debt_ratio": [
+        -20.81,
+        0.947,
+        1.131,
+        110.4,
+        3.218
+      ],
+      "equity_ratio": [
+        -0.05,
+        0.514,
+        0.469,
+        0.009,
+        0.237
+      ],
+      "short_debt_ratio": [
+        0.079,
+        0,
+        0.934,
+        0.977,
+        0.904
+      ],
+      "current_liab_ratio": [
+        0.206,
+        0.293,
+        0.958,
+        0.981,
+        0.91
+      ],
+      "intangible_ratio": [
+        0.049,
+        0.034,
+        0.035,
+        0.296,
+        0.302
+      ],
+      "capital_erosion": [
+        true,
+        false,
+        false,
+        true,
+        false
+      ]
+    },
+    "activity": {
+      "asset_turnover": [
+        0.93,
+        1.31,
+        1.32,
+        2.79,
+        2.27
+      ],
+      "ar_turnover": [
+        78.4,
+        59.3,
+        28.4,
+        36.4,
+        36.5
+      ],
+      "ar_days": [
+        4.7,
+        6.2,
+        12.9,
+        10.0,
+        10.0
+      ]
+    },
+    "investment_recovery": {
+      "remaining_pct": [
+        -0.51,
+        1.0,
+        0.51,
+        0.007,
+        0.172
+      ],
+      "note": "주주 누적 투자금 대비 잔존 비율 (자본총계/(자본금+자본잉여금))"
+    }
+  },
+  "income_items": [
+    {
+      "section": "매출",
+      "items": [
+        {
+          "name": "매출액",
+          "category": "매출",
+          "tag": "매출",
+          "values_mil": [
+            660,
+            1836,
+            3736,
+            5925,
+            7619
+          ],
+          "yoy_2025": 0.286,
+          "trend": "11.5배 증가",
+          "rev_share_2025": 1.0,
+          "learn_note": "회사가 본업으로 1년간 받은 총 금액. 짐캐리는 짐 배송·보관·특송 서비스의 총 매출.",
+          "investment_note": "8년간 11.5배 성장. PMF 검증됨. 단 성장률 178%→29%로 둔화 중 = S-curve 진입"
+        },
+        {
+          "name": "상품매출액",
+          "category": "매출",
+          "tag": "매출",
+          "values_mil": [
+            0,
+            23,
+            892,
+            4,
+            1
+          ],
+          "yoy_2025": -0.802,
+          "trend": "2023년 일회성",
+          "rev_share_2025": 0.0,
+          "learn_note": "서비스가 아닌 물건 판매 매출. 보관함·굿즈 등.",
+          "investment_note": "2023년 8.9억은 일회성. 2023년 성장률 +104% 중 47%p가 이것 기여"
+        },
+        {
+          "name": "임대수익",
+          "category": "매출",
+          "tag": "매출",
+          "values_mil": [
+            0,
+            0,
+            0,
+            22,
+            23
+          ],
+          "yoy_2025": 0.066,
+          "trend": "신규",
+          "rev_share_2025": 0.003,
+          "learn_note": "임대 형태 매출. 일부 매장 공간 재임대 추정.",
+          "investment_note": "2024년부터 발생, 비중 0.3%로 미미"
+        },
+        {
+          "name": "기타매출 (서비스)",
+          "category": "매출",
+          "tag": "매출",
+          "values_mil": [
+            660,
+            1813,
+            2844,
+            5899,
+            7595
+          ],
+          "yoy_2025": 0.288,
+          "trend": "11.5배",
+          "rev_share_2025": 0.997,
+          "learn_note": "본업인 짐 배송·보관·특송 서비스 매출.",
+          "investment_note": "매출의 99.7% 차지 = 짐캐리 본질은 서비스업"
+        }
+      ]
+    },
+    {
+      "section": "매출원가 & 매출총이익",
+      "items": [
+        {
+          "name": "매출원가",
+          "category": "기타",
+          "tag": "기타",
+          "values_mil": [
+            0,
+            18,
+            2,
+            4,
+            0
+          ],
+          "yoy_2025": -1.0,
+          "trend": "거의 0",
+          "rev_share_2025": 0.0,
+          "learn_note": "매출 만드는 데 직접 들어간 원재료·생산 비용. 서비스업은 거의 0.",
+          "investment_note": "서비스업 특성. 매출원가율 0% = 원재료 부담 없음"
+        },
+        {
+          "name": "매출총이익",
+          "category": "매출",
+          "tag": "매출",
+          "values_mil": [
+            660,
+            1818,
+            3734,
+            5921,
+            7619
+          ],
+          "yoy_2025": 0.287,
+          "trend": "11.5배 증가",
+          "rev_share_2025": 1.0,
+          "learn_note": "매출 - 매출원가. 매출에서 직접 비용 빼고 남은 1차 이익.",
+          "investment_note": "매출총이익률 100%는 좋은 게 아니라 서비스업 특성. 판관비율을 봐야 진짜 수익성 보임"
+        }
+      ]
+    },
+    {
+      "section": "판매비와관리비",
+      "items": [
+        {
+          "name": "판매비와관리비",
+          "category": "기타",
+          "tag": "기타",
+          "values_mil": [
+            697,
+            1752,
+            4979,
+            6784,
+            8234
+          ],
+          "yoy_2025": 0.214,
+          "trend": "11.8배 증가",
+          "rev_share_2025": 1.081,
+          "learn_note": "회사 운영하는 데 든 모든 비용 (인건비·임차료·수수료 등).",
+          "investment_note": "판관비율 108% = 본업 적자 직접 원인. 100% 이하로 떨어져야 영업 흑자"
+        },
+        {
+          "name": "급여 합계",
+          "category": "인건비",
+          "tag": "인건비",
+          "values_mil": [
+            207,
+            589,
+            2604,
+            3700,
+            4243
+          ],
+          "yoy_2025": 0.147,
+          "trend": "20.5배",
+          "rev_share_2025": 0.557,
+          "learn_note": "임원급여+직원급여+잡급의 합. 정규 직원에게 지급한 인건비 총액.",
+          "investment_note": "매출 대비 55.7% (2025). 2023년 77%까지 갔다가 매년 개선"
+        },
+        {
+          "name": "직원급여",
+          "category": "인건비",
+          "tag": "인건비",
+          "values_mil": [
+            192,
+            586,
+            2481,
+            3368,
+            3795
+          ],
+          "yoy_2025": 0.127,
+          "trend": "19.8배",
+          "rev_share_2025": 0.498,
+          "learn_note": "정규직 직원 급여.",
+          "investment_note": "2023년 +323% 폭발 (Series A 직후 채용 폭주) → 2023년 적자 폭발 직접 원인"
+        },
+        {
+          "name": "잡급 (일용직)",
+          "category": "인건비",
+          "tag": "인건비",
+          "values_mil": [
+            15,
+            3,
+            80,
+            282,
+            396
+          ],
+          "yoy_2025": 0.404,
+          "trend": "26.5배",
+          "rev_share_2025": 0.052,
+          "learn_note": "일용직·아르바이트 인건비. 변동비 성격.",
+          "investment_note": "2021년 15 → 2025년 396 (26배). 고정비를 변동비화하는 영리한 전략"
+        },
+        {
+          "name": "임원급여",
+          "category": "인건비",
+          "tag": "인건비",
+          "values_mil": [
+            0,
+            0,
+            43,
+            50,
+            52
+          ],
+          "yoy_2025": 0.028,
+          "trend": "동결",
+          "rev_share_2025": 0.007,
+          "learn_note": "대표·이사 등 등기임원 급여.",
+          "investment_note": "연 5,000만원대 동결 = 외부 채용 어려움 또는 대표 자기 급여 억제"
+        },
+        {
+          "name": "퇴직급여",
+          "category": "인건비",
+          "tag": "인건비",
+          "values_mil": [
+            11,
+            20,
+            117,
+            74,
+            81
+          ],
+          "yoy_2025": 0.089,
+          "trend": "7.7배",
+          "rev_share_2025": 0.011,
+          "learn_note": "직원 퇴직금 충당. 매년 인건비 1/12 적립이 정상.",
+          "investment_note": "직원수 대비 적은 편 = 적립 불충분 의심. 2025년 65백만 충당부채 신규 계상"
+        },
+        {
+          "name": "복리후생비",
+          "category": "인건비",
+          "tag": "인건비",
+          "values_mil": [
+            44,
+            109,
+            145,
+            212,
+            248
+          ],
+          "yoy_2025": 0.17,
+          "trend": "5.7배",
+          "rev_share_2025": 0.033,
+          "learn_note": "식대·경조사비·복지포인트 등 직원 복지 비용.",
+          "investment_note": "직원수 비례. 매출 대비 3.3%로 적정 수준"
+        },
+        {
+          "name": "임차료",
+          "category": "임차료",
+          "tag": "임차료",
+          "values_mil": [
+            228,
+            481,
+            1121,
+            1479,
+            1698
+          ],
+          "yoy_2025": 0.148,
+          "trend": "7.5배 증가",
+          "rev_share_2025": 0.223,
+          "learn_note": "매장·사무실 월세. 짐캐리는 35개 거점의 임차료 합계.",
+          "investment_note": "매출 대비 35% → 22%로 13%p 개선. 운영 레버리지 작동"
+        },
+        {
+          "name": "지급수수료",
+          "category": "플랫폼",
+          "tag": "플랫폼",
+          "values_mil": [
+            25,
+            71,
+            282,
+            449,
+            561
+          ],
+          "yoy_2025": 0.251,
+          "trend": "22.4배",
+          "rev_share_2025": 0.074,
+          "learn_note": "IT 서비스, 카드결제, 외부 전문가 자문 수수료 등.",
+          "investment_note": "매출 대비 7.4%. IT 시스템 의존도 증가 (통합앱·배차 등)"
+        },
+        {
+          "name": "판매수수료",
+          "category": "플랫폼",
+          "tag": "플랫폼",
+          "values_mil": [
+            0,
+            0,
+            13,
+            13,
+            110
+          ],
+          "yoy_2025": 7.46,
+          "trend": "8.5배 점프",
+          "rev_share_2025": 0.014,
+          "learn_note": "OTA(KKday, Klook, Trip.com 등) 예약 플랫폼 수수료.",
+          "investment_note": "🚨 1년 만에 8.5배 점프. 인바운드 관광 OTA 의존 급증. 매출의 자동 차감 항목"
+        },
+        {
+          "name": "용역비",
+          "category": "플랫폼",
+          "tag": "플랫폼",
+          "values_mil": [
+            0,
+            0,
+            61,
+            41,
+            119
+          ],
+          "yoy_2025": 1.941,
+          "trend": "급증",
+          "rev_share_2025": 0.016,
+          "learn_note": "외주 인력 용역, 컨설팅 등.",
+          "investment_note": "2025년 119백만으로 증가. IT 외주 또는 컨설팅 확대 추정"
+        },
+        {
+          "name": "운반비",
+          "category": "운송",
+          "tag": "운송",
+          "values_mil": [
+            0,
+            5,
+            34,
+            145,
+            252
+          ],
+          "yoy_2025": 0.738,
+          "trend": "급증",
+          "rev_share_2025": 0.033,
+          "learn_note": "특송 사업의 직접 운송비 (KTX 운송료, 화물 위탁 등).",
+          "investment_note": "매출 대비 3.3%만 운송비. 특송 사업 마진 매우 높음 (IR의 캐시카우 주장 근거)"
+        },
+        {
+          "name": "감가상각비",
+          "category": "기타",
+          "tag": "기타",
+          "values_mil": [
+            0,
+            178,
+            0,
+            0,
+            226
+          ],
+          "yoy_2025": null,
+          "trend": "비정상",
+          "rev_share_2025": 0.03,
+          "learn_note": "유형자산(차량·시설)의 매년 가치 감소 비용. 현금 안 나가는 비용.",
+          "investment_note": "⚠️ 2023~2024년 0으로 표시 = 회계 누락 의심. 2025년 226백만 일괄 계상"
+        },
+        {
+          "name": "무형자산상각비",
+          "category": "기타",
+          "tag": "기타",
+          "values_mil": [
+            0,
+            0,
+            0,
+            0,
+            12
+          ],
+          "yoy_2025": null,
+          "trend": "신규",
+          "rev_share_2025": 0.002,
+          "learn_note": "개발비·소프트웨어 등 무형자산의 매년 가치 감소.",
+          "investment_note": "2025년 처음 12백만 계상. 개발비 9.7억 자산화 누적이라 향후 매년 증가"
+        },
+        {
+          "name": "광고선전비",
+          "category": "마케팅",
+          "tag": "마케팅",
+          "values_mil": [
+            10,
+            11,
+            8,
+            9,
+            12
+          ],
+          "yoy_2025": 0.333,
+          "trend": "거의 동결",
+          "rev_share_2025": 0.002,
+          "learn_note": "TV·온라인·오프라인 광고비.",
+          "investment_note": "🚨 2025년 12백만 = 매출의 0.16%. 적극적 마케팅 안 함. B2B 거점 영업 의존"
+        }
+      ]
+    },
+    {
+      "section": "영업이익",
+      "items": [
+        {
+          "name": "영업이익(손실)",
+          "category": "손익",
+          "tag": "손익",
+          "values_mil": [
+            -37,
+            66,
+            -1245,
+            -864,
+            -615
+          ],
+          "yoy_2025": 0.288,
+          "trend": "개선 추세",
+          "rev_share_2025": -0.081,
+          "learn_note": "매출 - 매출원가 - 판관비. 본업으로 번 돈.",
+          "investment_note": "🎯 -33% → -8% 빠른 개선. 2026~2027년 BEP 가시권"
+        }
+      ]
+    },
+    {
+      "section": "영업외손익",
+      "items": [
+        {
+          "name": "영업외수익",
+          "category": "기타",
+          "tag": "기타",
+          "values_mil": [
+            17,
+            42,
+            24,
+            37,
+            75
+          ],
+          "yoy_2025": 1.027,
+          "trend": "변동",
+          "rev_share_2025": 0.01,
+          "learn_note": "본업 외 수익 (이자수익, 임대수익, 정부보조금 등).",
+          "investment_note": "연 75백만 수준, 큰 의미 없음"
+        },
+        {
+          "name": "이자비용",
+          "category": "금융",
+          "tag": "금융",
+          "values_mil": [
+            18,
+            20,
+            41,
+            45,
+            60
+          ],
+          "yoy_2025": 0.333,
+          "trend": "3.3배",
+          "rev_share_2025": 0.008,
+          "learn_note": "차입금에 대한 이자.",
+          "investment_note": "🚨 18 → 60백만. 차입 17%↑ 대비 이자 3.3x = 이자율 상승"
+        },
+        {
+          "name": "영업외비용",
+          "category": "기타",
+          "tag": "기타",
+          "values_mil": [
+            19,
+            21,
+            72,
+            56,
+            99
+          ],
+          "yoy_2025": 0.768,
+          "trend": "5.2배",
+          "rev_share_2025": 0.013,
+          "learn_note": "본업 외 비용 (이자비용, 자산처분손실 등).",
+          "investment_note": "연 99백만, 대부분 이자비용"
+        }
+      ]
+    },
+    {
+      "section": "당기순이익",
+      "items": [
+        {
+          "name": "당기순이익",
+          "category": "손익",
+          "tag": "손익",
+          "values_mil": [
+            -39,
+            108,
+            -1293,
+            -882,
+            -639
+          ],
+          "yoy_2025": 0.276,
+          "trend": "개선",
+          "rev_share_2025": -0.084,
+          "learn_note": "최종 회사가 번 돈. 모든 수익·비용 정산 후.",
+          "investment_note": "8년 누적 -28억. 매년 자본 까먹는 중"
+        }
+      ]
+    }
+  ],
+  "balance_items": [
+    {
+      "section": "자산",
+      "items": [
+        {
+          "name": "자산총계",
+          "tag": "기타",
+          "values_mil": [
+            707,
+            1404,
+            2826,
+            2122,
+            3355
+          ],
+          "yoy_2025": 0.581,
+          "trend": "4.7배",
+          "asset_share_2025": 1.0,
+          "learn_note": "회사 소유 자산 총합.",
+          "investment_note": "7년간 4.7배 증가. 단 자산 질은 악화 (즉시 현금화 가능 비중 감소)"
+        },
+        {
+          "name": "유동자산",
+          "tag": "기타",
+          "values_mil": [
+            205,
+            979,
+            1547,
+            480,
+            1327
+          ],
+          "yoy_2025": 1.764,
+          "trend": "6.5배",
+          "asset_share_2025": 0.396,
+          "learn_note": "1년 이내 현금화 가능한 자산.",
+          "investment_note": "자산의 40% (2025). 2024년에 23%까지 떨어진 적 있음 = 부도 위기 직전"
+        },
+        {
+          "name": "현금 및 현금성자산",
+          "tag": "현금성",
+          "values_mil": [
+            110,
+            887,
+            1265,
+            186,
+            1012
+          ],
+          "yoy_2025": 4.429,
+          "trend": "9.2배",
+          "asset_share_2025": 0.302,
+          "learn_note": "통장 잔고 + 즉시 인출 가능한 예금.",
+          "investment_note": "🎯 2024년 1.9억 → 2025년 10.1억 = 증자로 확보. Runway 16개월"
+        },
+        {
+          "name": "매출채권",
+          "tag": "운전자본",
+          "values_mil": [
+            8,
+            31,
+            132,
+            163,
+            209
+          ],
+          "yoy_2025": 0.286,
+          "trend": "24.8배",
+          "asset_share_2025": 0.062,
+          "learn_note": "고객에게 받을 돈. B2B 거래에서 발생.",
+          "investment_note": "6.7배 증가 (매출 4.2배보다 빠름) = B2B 비중 확대 신호"
+        },
+        {
+          "name": "비유동자산",
+          "tag": "기타",
+          "values_mil": [
+            502,
+            426,
+            1279,
+            1642,
+            2027
+          ],
+          "yoy_2025": 0.235,
+          "trend": "4배",
+          "asset_share_2025": 0.604,
+          "learn_note": "1년 이상 보유하며 영업에 활용하는 자산.",
+          "investment_note": "자산의 60% (2025). 무형자산 비중 급증으로 자산 무형화 진행"
+        },
+        {
+          "name": "유형자산",
+          "tag": "인프라",
+          "values_mil": [
+            353,
+            254,
+            898,
+            673,
+            331
+          ],
+          "yoy_2025": -0.508,
+          "trend": "감소",
+          "asset_share_2025": 0.099,
+          "learn_note": "눈에 보이는 자산 (차량·시설·비품 등).",
+          "investment_note": "⚠️ 2024년 673 → 2025년 331로 절반 감소. 처분 또는 일괄 감가상각"
+        },
+        {
+          "name": "무형자산",
+          "tag": "무형",
+          "values_mil": [
+            34,
+            48,
+            100,
+            628,
+            1012
+          ],
+          "yoy_2025": 0.613,
+          "trend": "29.4배",
+          "asset_share_2025": 0.302,
+          "learn_note": "눈에 안 보이는 자산 (개발비·소프트웨어·영업권).",
+          "investment_note": "🚨 2023년 100 → 2025년 1,012 (10배). 자산의 30% = 손상 리스크 폭탄"
+        },
+        {
+          "name": "보증금",
+          "tag": "담보금",
+          "values_mil": [
+            115,
+            123,
+            281,
+            341,
+            551
+          ],
+          "yoy_2025": 0.615,
+          "trend": "4.8배",
+          "asset_share_2025": 0.164,
+          "learn_note": "임차보증금. 매장 임대 시 묶인 돈.",
+          "investment_note": "🎯 1.1억 → 5.5억 (5배). 35개 거점 임차의 직접 결과"
+        }
+      ]
+    },
+    {
+      "section": "부채",
+      "items": [
+        {
+          "name": "부채총계",
+          "tag": "기타",
+          "values_mil": [
+            743,
+            683,
+            1500,
+            2103,
+            2559
+          ],
+          "yoy_2025": 0.217,
+          "trend": "3.4배",
+          "asset_share_2025": 0.763,
+          "category_share": 1.0,
+          "learn_note": "회사가 외부에 갚아야 할 돈 총합.",
+          "investment_note": "7년간 3.4배 증가"
+        },
+        {
+          "name": "유동부채",
+          "tag": "기타",
+          "values_mil": [
+            153,
+            200,
+            1437,
+            2063,
+            2330
+          ],
+          "yoy_2025": 0.129,
+          "trend": "15.2배",
+          "asset_share_2025": 0.695,
+          "category_share": 0.91,
+          "learn_note": "1년 이내 상환 의무가 있는 부채.",
+          "investment_note": "🚨 부채의 91% = 단기 부담 극도로 높음. 정상은 50% 이하"
+        },
+        {
+          "name": "단기차입금",
+          "tag": "차입",
+          "values_mil": [
+            51,
+            0,
+            900,
+            1307,
+            1420
+          ],
+          "yoy_2025": 0.087,
+          "trend": "28배",
+          "asset_share_2025": 0.423,
+          "category_share": 0.555,
+          "learn_note": "1년 이내 상환할 은행·금융기관 대출.",
+          "investment_note": "🚨 14.2억 = 부채의 56%. 매년 롤오버 필요"
+        },
+        {
+          "name": "미지급비용",
+          "tag": "운영부채",
+          "values_mil": [
+            44,
+            92,
+            313,
+            504,
+            648
+          ],
+          "yoy_2025": 0.286,
+          "trend": "14.7배",
+          "asset_share_2025": 0.193,
+          "category_share": 0.253,
+          "learn_note": "발생했으나 아직 안 낸 비용 (급여·이자·세금 등).",
+          "investment_note": "🚨 2022년 92 → 2025년 648 (7배). 매출(4.2배)보다 빠름"
+        },
+        {
+          "name": "비유동부채",
+          "tag": "기타",
+          "values_mil": [
+            590,
+            483,
+            64,
+            40,
+            229
+          ],
+          "yoy_2025": 4.773,
+          "trend": "감소 후 회복",
+          "asset_share_2025": 0.068,
+          "category_share": 0.09,
+          "learn_note": "1년 이후 상환할 부채.",
+          "investment_note": "부채의 9%만. 정상 기업은 40~60%여야 건강"
+        },
+        {
+          "name": "장기차입금",
+          "tag": "차입",
+          "values_mil": [
+            590,
+            483,
+            64,
+            31,
+            150
+          ],
+          "yoy_2025": 3.884,
+          "trend": "감소 후 회복",
+          "asset_share_2025": 0.045,
+          "category_share": 0.059,
+          "learn_note": "1년 이후 상환할 은행·금융기관 대출.",
+          "investment_note": "2021년 590 → 2025년 150 = 장기차입이 만기 도래로 단기로 전환"
+        }
+      ]
+    },
+    {
+      "section": "자본",
+      "items": [
+        {
+          "name": "자본총계",
+          "tag": "기타",
+          "values_mil": [
+            -36,
+            721,
+            1326,
+            19,
+            795
+          ],
+          "yoy_2025": 40.745,
+          "trend": "급증",
+          "asset_share_2025": 0.237,
+          "category_share": 1.0,
+          "learn_note": "자산 - 부채 = 주주에게 돌아갈 순자산.",
+          "investment_note": "🚨 2021년 -36 (완전 자본잠식), 2024년 19 (잠식 직전). 매번 증자로 회생"
+        },
+        {
+          "name": "자본금",
+          "tag": "투자원금",
+          "values_mil": [
+            22,
+            23,
+            518,
+            518,
+            573
+          ],
+          "yoy_2025": 0.105,
+          "trend": "26.4배",
+          "asset_share_2025": 0.171,
+          "category_share": 0.124,
+          "learn_note": "주주가 액면가로 투자한 원금.",
+          "investment_note": "2023년 22 → 518 (24배). Series A로 신주 대량 발행"
+        },
+        {
+          "name": "보통주자본금",
+          "tag": "투자원금",
+          "values_mil": [
+            22,
+            23,
+            402,
+            402,
+            402
+          ],
+          "yoy_2025": 0.0,
+          "trend": "동결",
+          "asset_share_2025": 0.12,
+          "category_share": 0.703,
+          "learn_note": "일반 주식. 의결권·배당권 있고 청산 시 후순위.",
+          "investment_note": "창업자·임직원·일부 투자자 보유 추정"
+        },
+        {
+          "name": "우선주자본금",
+          "tag": "투자원금",
+          "values_mil": [
+            0,
+            0,
+            116,
+            116,
+            170
+          ],
+          "yoy_2025": 0.471,
+          "trend": "신규",
+          "asset_share_2025": 0.051,
+          "category_share": 0.297,
+          "learn_note": "VC 선호 우선주. 청산 시 보통주보다 먼저 회수.",
+          "investment_note": "🎯 VC 투자 흔적의 직접 증거. 2025년 170백만 = VC 우선주"
+        },
+        {
+          "name": "자본잉여금",
+          "tag": "투자원금",
+          "values_mil": [
+            48,
+            697,
+            2102,
+            2102,
+            4044
+          ],
+          "yoy_2025": 0.924,
+          "trend": "83.8배",
+          "asset_share_2025": 1.206,
+          "category_share": 0.876,
+          "learn_note": "주식을 액면가보다 비싸게 발행한 프리미엄.",
+          "investment_note": "🎯 4,044백만 = 주주 누적 프리미엄 투자"
+        },
+        {
+          "name": "이익잉여금",
+          "tag": "결손",
+          "values_mil": [
+            -105,
+            3,
+            -1290,
+            -2598,
+            -3819
+          ],
+          "yoy_2025": -0.47,
+          "trend": "악화",
+          "asset_share_2025": -1.138,
+          "category_share": -0.827,
+          "learn_note": "창업 이후 누적 순이익 - 배당. 음수면 누적 결손.",
+          "investment_note": "🚨 -3,819백만 = 누적 38억 까먹음. 주주 투자금 46억의 83% 소진"
+        }
+      ]
+    }
+  ],
+  "business_structure": {
+    "summary": {
+      "total_stores": 35,
+      "domestic": 29,
+      "overseas": 6,
+      "ir_2024_included": 20,
+      "ir_2024_new": 15
+    },
+    "categories": [
+      {
+        "id": 1,
+        "name": "여행짐 배송 (국내)",
+        "ir_match": "여행짐 사업부",
+        "is_new": false,
+        "details": "공항·역·터미널↔숙소↔역 짐 당일 배송",
+        "type": "B2C"
+      },
+      {
+        "id": 2,
+        "name": "여행짐 배송 (해외)",
+        "ir_match": "해외 확장 계획",
+        "is_new": true,
+        "details": "일본·베트남 현지 매장 배송 (나리타·하네다·다낭)",
+        "type": "B2C"
+      },
+      {
+        "id": 3,
+        "name": "KTX/SRT 특송",
+        "ir_match": "KTX 특송 사업부",
+        "is_new": false,
+        "details": "고속철 활용 반나절 특급 배송",
+        "type": "B2C/B2B"
+      },
+      {
+        "id": 4,
+        "name": "유인·무인·장기 보관",
+        "ir_match": "IoT 보관함 (부분)",
+        "is_new": false,
+        "details": "매장 보관 / IoT 보관함 / 장기 보관 / 에어패스",
+        "type": "B2C"
+      },
+      {
+        "id": 5,
+        "name": "B2B 이벤트·상설 보관",
+        "ir_match": "없음",
+        "is_new": true,
+        "details": "BEXCO / 사직구장(롯데) / NC파크(창원)",
+        "type": "B2B"
+      },
+      {
+        "id": 6,
+        "name": "공항 코트룸·수하물 제휴",
+        "ir_match": "없음",
+        "is_new": true,
+        "details": "대한항공·아시아나·LCC 항공사 외투 보관",
+        "type": "B2B"
+      },
+      {
+        "id": 7,
+        "name": "스마트시티/로봇 협업",
+        "ir_match": "없음",
+        "is_new": true,
+        "details": "에코델타시티 짐캐리 로봇 (부산시 협업)",
+        "type": "B2G/R&D"
+      }
+    ],
+    "stores": [
+      {
+        "id": 1,
+        "name": "인천공항T1 서편",
+        "type": "공항",
+        "region": "인천",
+        "category": "여행짐",
+        "ir_2024": false,
+        "is_new": true
+      },
+      {
+        "id": 2,
+        "name": "인천공항T1 동편",
+        "type": "공항",
+        "region": "인천",
+        "category": "여행짐",
+        "ir_2024": false,
+        "is_new": true
+      },
+      {
+        "id": 3,
+        "name": "인천공항T1 공항철도",
+        "type": "공항",
+        "region": "인천",
+        "category": "여행짐",
+        "ir_2024": false,
+        "is_new": true
+      },
+      {
+        "id": 4,
+        "name": "서울역",
+        "type": "기차역",
+        "region": "서울",
+        "category": "여행짐+특송",
+        "ir_2024": true,
+        "is_big4": true
+      },
+      {
+        "id": 5,
+        "name": "용산역",
+        "type": "기차역",
+        "region": "서울",
+        "category": "특송",
+        "ir_2024": true,
+        "is_big5": true
+      },
+      {
+        "id": 6,
+        "name": "홍대입구역",
+        "type": "지하철역",
+        "region": "서울",
+        "category": "여행짐",
+        "ir_2024": false,
+        "is_new": true
+      },
+      {
+        "id": 7,
+        "name": "김포공항 국내선",
+        "type": "공항",
+        "region": "서울",
+        "category": "여행짐",
+        "ir_2024": true
+      },
+      {
+        "id": 8,
+        "name": "광명역",
+        "type": "기차역",
+        "region": "경기",
+        "category": "특송",
+        "ir_2024": true,
+        "is_big5": true
+      },
+      {
+        "id": 9,
+        "name": "동탄역",
+        "type": "기차역",
+        "region": "경기",
+        "category": "특송",
+        "ir_2024": false,
+        "is_new": true,
+        "note": "SRT 신규"
+      },
+      {
+        "id": 10,
+        "name": "서울고속버스터미널",
+        "type": "터미널",
+        "region": "서울",
+        "category": "여행짐",
+        "ir_2024": true,
+        "is_big4": true
+      },
+      {
+        "id": 11,
+        "name": "오송역",
+        "type": "기차역",
+        "region": "충북",
+        "category": "특송",
+        "ir_2024": true
+      },
+      {
+        "id": 12,
+        "name": "천안아산역",
+        "type": "기차역",
+        "region": "충남",
+        "category": "특송",
+        "ir_2024": true
+      },
+      {
+        "id": 13,
+        "name": "대전역",
+        "type": "기차역",
+        "region": "대전",
+        "category": "특송",
+        "ir_2024": true,
+        "is_big5": true
+      },
+      {
+        "id": 14,
+        "name": "청주공항",
+        "type": "공항",
+        "region": "충북",
+        "category": "여행짐",
+        "ir_2024": false,
+        "is_new": true
+      },
+      {
+        "id": 15,
+        "name": "부산역",
+        "type": "기차역",
+        "region": "부산",
+        "category": "여행짐+특송",
+        "ir_2024": true,
+        "is_big4": true,
+        "note": "본사 소재"
+      },
+      {
+        "id": 16,
+        "name": "부산항 국제여객터미널",
+        "type": "항구",
+        "region": "부산",
+        "category": "여행짐",
+        "ir_2024": true
+      },
+      {
+        "id": 17,
+        "name": "BEXCO",
+        "type": "컨벤션",
+        "region": "부산",
+        "category": "B2B 이벤트",
+        "ir_2024": false,
+        "is_new": true
+      },
+      {
+        "id": 18,
+        "name": "사직구장",
+        "type": "스포츠",
+        "region": "부산",
+        "category": "B2B 이벤트",
+        "ir_2024": false,
+        "is_new": true,
+        "note": "롯데"
+      },
+      {
+        "id": 19,
+        "name": "NC파크",
+        "type": "스포츠",
+        "region": "경남",
+        "category": "B2B 이벤트",
+        "ir_2024": false,
+        "is_new": true,
+        "note": "창원"
+      },
+      {
+        "id": 20,
+        "name": "김해공항 국내선",
+        "type": "공항",
+        "region": "부산",
+        "category": "여행짐",
+        "ir_2024": true,
+        "is_big4": true
+      },
+      {
+        "id": 21,
+        "name": "김해공항 국제선",
+        "type": "공항",
+        "region": "부산",
+        "category": "여행짐",
+        "ir_2024": true,
+        "note": "항공사 코트룸"
+      },
+      {
+        "id": 22,
+        "name": "대구공항 국내선",
+        "type": "공항",
+        "region": "대구",
+        "category": "여행짐",
+        "ir_2024": true
+      },
+      {
+        "id": 23,
+        "name": "동대구역",
+        "type": "기차역",
+        "region": "대구",
+        "category": "특송",
+        "ir_2024": true,
+        "is_big5": true
+      },
+      {
+        "id": 24,
+        "name": "경주역",
+        "type": "기차역",
+        "region": "경북",
+        "category": "특송",
+        "ir_2024": true
+      },
+      {
+        "id": 25,
+        "name": "광주송정역",
+        "type": "기차역",
+        "region": "광주",
+        "category": "특송",
+        "ir_2024": true
+      },
+      {
+        "id": 26,
+        "name": "광주 유스퀘어",
+        "type": "터미널",
+        "region": "광주",
+        "category": "여행짐",
+        "ir_2024": true
+      },
+      {
+        "id": 27,
+        "name": "목포역",
+        "type": "기차역",
+        "region": "전남",
+        "category": "특송",
+        "ir_2024": true
+      },
+      {
+        "id": 28,
+        "name": "강릉역",
+        "type": "기차역",
+        "region": "강원",
+        "category": "여행짐+특송",
+        "ir_2024": true,
+        "note": "KTX 이음"
+      },
+      {
+        "id": 29,
+        "name": "제주국제공항",
+        "type": "공항",
+        "region": "제주",
+        "category": "여행짐",
+        "ir_2024": true,
+        "is_big4": true,
+        "note": "최대 매출 지점"
+      },
+      {
+        "id": 30,
+        "name": "나리타 국제공항 제1터미널",
+        "type": "공항",
+        "region": "일본",
+        "category": "해외 여행짐",
+        "ir_2024": false,
+        "is_new": true,
+        "is_overseas": true
+      },
+      {
+        "id": 31,
+        "name": "나리타 국제공항 제2터미널",
+        "type": "공항",
+        "region": "일본",
+        "category": "해외 여행짐",
+        "ir_2024": false,
+        "is_new": true,
+        "is_overseas": true
+      },
+      {
+        "id": 32,
+        "name": "하네다 공항 제1터미널",
+        "type": "공항",
+        "region": "일본",
+        "category": "해외 여행짐",
+        "ir_2024": false,
+        "is_new": true,
+        "is_overseas": true
+      },
+      {
+        "id": 33,
+        "name": "하네다 공항 제2터미널",
+        "type": "공항",
+        "region": "일본",
+        "category": "해외 여행짐",
+        "ir_2024": false,
+        "is_new": true,
+        "is_overseas": true
+      },
+      {
+        "id": 34,
+        "name": "하네다 공항 제3터미널",
+        "type": "공항",
+        "region": "일본",
+        "category": "해외 여행짐",
+        "ir_2024": false,
+        "is_new": true,
+        "is_overseas": true
+      },
+      {
+        "id": 35,
+        "name": "다낭 국제공항",
+        "type": "공항",
+        "region": "베트남",
+        "category": "해외 여행짐",
+        "ir_2024": false,
+        "is_new": true,
+        "is_overseas": true
+      }
+    ],
+    "ir_segment_2024": {
+      "travel_baggage": {
+        "revenue_mil": 3818,
+        "share": 0.645,
+        "stores": 15,
+        "big4_share_within_segment": 0.906
+      },
+      "express": {
+        "revenue_mil": 1512,
+        "share": 0.255,
+        "stores": 13,
+        "big5_share_within_segment": 0.894,
+        "note": "IR 내부 수치 모순 - 빅5 합계 2,019 > 사업부 1,512"
+      },
+      "etc": {
+        "revenue_mil": 594,
+        "share": 0.1
+      }
+    }
+  },
+  "dashboard": {
+    "top_kpis": [
+      {
+        "label": "매출액",
+        "value_2025": 76.19,
+        "unit": "억",
+        "yoy": 0.286,
+        "trend": "11.5x",
+        "signal": "green"
+      },
+      {
+        "label": "영업이익",
+        "value_2025": -6.15,
+        "unit": "억",
+        "yoy": 0.288,
+        "trend": "개선",
+        "signal": "yellow"
+      },
+      {
+        "label": "당기순이익",
+        "value_2025": -6.39,
+        "unit": "억",
+        "yoy": 0.276,
+        "trend": "개선",
+        "signal": "yellow"
+      },
+      {
+        "label": "자본총계",
+        "value_2025": 7.95,
+        "unit": "억",
+        "yoy": 40.74,
+        "trend": "회복",
+        "signal": "yellow"
+      },
+      {
+        "label": "현금성자산",
+        "value_2025": 10.12,
+        "unit": "억",
+        "yoy": 4.43,
+        "trend": "증자효과",
+        "signal": "green"
+      },
+      {
+        "label": "Runway",
+        "value_2025": 16.2,
+        "unit": "개월",
+        "yoy": null,
+        "trend": "16개월치",
+        "signal": "yellow"
+      }
+    ],
+    "categories": [
+      {
+        "name": "성장성",
+        "signal": "green",
+        "summary": "🟢 우수",
+        "comment": "매출 11.5배 성장. 시장 PMF 검증. 단 성장률 둔화 추세 (S-curve 진입)",
+        "kpis": [
+          {
+            "name": "매출 성장률 (YoY)",
+            "value": 0.286,
+            "unit": "%",
+            "signal": "green",
+            "benchmark": "20%↑ 양호"
+          },
+          {
+            "name": "매출 5년 성장 배수",
+            "value": 11.54,
+            "unit": "배",
+            "signal": "yellow",
+            "benchmark": "5배↑ 우수"
+          },
+          {
+            "name": "자산 성장률 (YoY)",
+            "value": 0.581,
+            "unit": "%",
+            "signal": "yellow",
+            "benchmark": "매출과 비교"
+          }
+        ]
+      },
+      {
+        "name": "수익성",
+        "signal": "yellow",
+        "summary": "🟡 개선중",
+        "comment": "영업이익률 -33% → -8% 빠른 개선. EBITDA 마진 -5%로 BEP 임박. 2026~2027년 흑자 전환 시나리오",
+        "kpis": [
+          {
+            "name": "영업이익률",
+            "value": -0.081,
+            "unit": "%",
+            "signal": "yellow",
+            "benchmark": "0%↑ 흑자"
+          },
+          {
+            "name": "EBITDA 마진",
+            "value": -0.049,
+            "unit": "%",
+            "signal": "yellow",
+            "benchmark": "5%↑ 양호"
+          },
+          {
+            "name": "순이익률",
+            "value": -0.084,
+            "unit": "%",
+            "signal": "yellow",
+            "benchmark": "5%↑ 양호"
+          }
+        ]
+      },
+      {
+        "name": "안정성",
+        "signal": "red",
+        "summary": "🔴 위험",
+        "comment": "단기차입 의존(91%), 자본잠식 2회 경험, 부채비율 322%. Series A Bridge로 일단 회복",
+        "kpis": [
+          {
+            "name": "유동비율",
+            "value": 0.57,
+            "unit": "%",
+            "signal": "red",
+            "benchmark": "150%↑ 안전"
+          },
+          {
+            "name": "부채비율",
+            "value": 3.218,
+            "unit": "%",
+            "signal": "yellow",
+            "benchmark": "200%↓ 양호"
+          },
+          {
+            "name": "자기자본비율",
+            "value": 0.237,
+            "unit": "%",
+            "signal": "yellow",
+            "benchmark": "30%↑ 양호"
+          },
+          {
+            "name": "자본잠식 위험",
+            "value": "정상",
+            "unit": "",
+            "signal": "green",
+            "benchmark": "잠식없음"
+          }
+        ]
+      },
+      {
+        "name": "활동성",
+        "signal": "green",
+        "summary": "🟢 우수",
+        "comment": "총자산회전율 2.27회로 우수. 매출채권 회수 10일로 양호",
+        "kpis": [
+          {
+            "name": "총자산회전율",
+            "value": 2.27,
+            "unit": "회",
+            "signal": "green",
+            "benchmark": "1.0회↑ 양호"
+          },
+          {
+            "name": "매출채권 회전율",
+            "value": 36.46,
+            "unit": "회",
+            "signal": "green",
+            "benchmark": "높을수록 양호"
+          },
+          {
+            "name": "매출채권 회수기간",
+            "value": 10,
+            "unit": "일",
+            "signal": "green",
+            "benchmark": "30일↓ 우수"
+          }
+        ]
+      },
+      {
+        "name": "현금흐름",
+        "signal": "red",
+        "summary": "🔴 위험",
+        "comment": "OCF·FCF 모두 음수. 이자보상배율 -10배 (이자도 못냄). 외부 자금 100% 의존",
+        "kpis": [
+          {
+            "name": "OCF (영업현금흐름)",
+            "value": -3.33,
+            "unit": "억",
+            "signal": "red",
+            "benchmark": "+ 양호"
+          },
+          {
+            "name": "FCF (자유현금흐름)",
+            "value": -7.48,
+            "unit": "억",
+            "signal": "red",
+            "benchmark": "+ 양호"
+          },
+          {
+            "name": "이자보상배율",
+            "value": -10.24,
+            "unit": "배",
+            "signal": "red",
+            "benchmark": "5배↑ 정상"
+          },
+          {
+            "name": "현금성자산",
+            "value": 10.12,
+            "unit": "억",
+            "signal": "green",
+            "benchmark": "Runway 12월↑"
+          }
+        ]
+      }
+    ],
+    "overall_assessment": {
+      "signal": "yellow",
+      "label": "🟡 전환기",
+      "summary": "성장은 검증됐고 수익성 개선 중이지만 자본·현금 구조 약함",
+      "key_question": "흑자 전환 시점이 투자 베팅 포인트",
+      "scenarios": {
+        "bullish": "2026~2027년 영업 흑자 전환, 인천공항·SRT 매출 효과로 IR 계획의 70~80% 달성",
+        "base": "2027년 BEP 도달, 매년 추가 자금 조달 필요",
+        "bearish": "흑자 전환 지연, 추가 증자 실패 시 자본잠식 재발 위험"
+      }
+    }
+  }
+}
