@@ -1,4 +1,17 @@
 import raw from "@/data/zimcarry_data.json";
+import migratedAnalysis from "@/data/zimcarry_analysis.json";
+import type { CompanyAnalysis } from "@/types/CompanyAnalysis";
+
+/**
+ * 새 schema에 맞춘 CompanyAnalysis 객체.
+ * dashboard 컴포넌트는 점진적으로 이 export로 마이그레이션.
+ * 레거시 `data` export는 backward-compat용으로 한동안 유지.
+ *
+ * Cast 이유: JSON import는 literal widening 발생 ("백만원" → string).
+ * 마이그레이션 스크립트가 schema 준수해서 만든 JSON이므로 trust 가능.
+ */
+export const analysis = migratedAnalysis as unknown as CompanyAnalysis;
+
 
 export type Signal = "green" | "yellow" | "red";
 
