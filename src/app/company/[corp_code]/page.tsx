@@ -20,18 +20,18 @@ import { TrendChart } from "@/components/TrendChart";
 import { RichText } from "@/components/RichText";
 import { GenerateNarrativeButton } from "@/components/GenerateNarrativeButton";
 import {
+  DashboardKpiCard,
+  type KpiSeriesKind,
+} from "@/components/DashboardKpiCard";
+import { CategoryDetailCard } from "@/components/CategoryDetailCard";
+import {
   SIGNAL_BAR,
-  SIGNAL_BG,
-  SIGNAL_DOT,
   computeLiteCategories,
-  type LiteCategory,
 } from "@/lib/signal";
-import { fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Signal } from "@/lib/data";
 import type {
-  ComputedTopKpi,
-  CategoryNarrative,
+  ComputedMetrics,
   TopVerdict,
 } from "@/types/CompanyAnalysis";
 
@@ -117,23 +117,55 @@ export default async function CompanyDashboard({
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
           {narrative
             ? narrative.categories.map((c) => (
-                <CategoryCard key={c.name} category={c} />
+                <CategoryDetailCard
+                  key={c.name}
+                  category={{
+                    name: c.name,
+                    signal: c.signal,
+                    summary: c.summary,
+                    comment: c.comment,
+                  }}
+                  computed={computed}
+                  isLite={false}
+                />
               ))
             : computeLiteCategories(computed).map((c) => (
-                <LiteCategoryCard key={c.name} category={c} />
+                <CategoryDetailCard
+                  key={c.name}
+                  category={{
+                    name: c.name,
+                    signal: c.signal,
+                    summary: c.summary,
+                  }}
+                  computed={computed}
+                  isLite
+                />
               ))}
         </div>
       </section>
 
-      {/* Top KPIs — 결정적, 항상 표시 */}
+      {/* Top KPIs — 결정적, 항상 표시. 카드 클릭 → 정의 + 5년 추이 + 임계치 모달 */}
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-gray-900">
           핵심 KPI · {lastYear}년
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            카드 클릭 → 5년 추이 + 정의
+          </span>
         </h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {computed.top_kpis.map((kpi) => (
-            <KpiCard key={kpi.label} kpi={kpi} />
-          ))}
+          {computed.top_kpis.map((kpi) => {
+            const meta = kpiSeriesMeta(kpi.label, computed);
+            return (
+              <DashboardKpiCard
+                key={kpi.label}
+                kpi={kpi}
+                years={years}
+                series={meta?.values}
+                seriesKind={meta?.kind}
+                color={meta?.color}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -175,6 +207,44 @@ export default async function CompanyDashboard({
 }
 
 // ─────────────────────────────────────────────────────────────────
+// KPI label → 5년 추이 series 매핑. 모달에 차트 띄울 때 사용.
+// ─────────────────────────────────────────────────────────────────
+
+function kpiSeriesMeta(
+  label: string,
+  c: ComputedMetrics
+):
+  | { values: (number | null)[]; kind: KpiSeriesKind; color?: string }
+  | undefined {
+  const r = c.ratios;
+  const cf = c.derived_cf;
+  switch (label) {
+    case "매출 YoY":
+      return { values: r.growth?.revenue_yoy ?? [], kind: "percent", color: "#0f172a" };
+    case "영업이익률":
+      return { values: r.profitability?.operating_margin ?? [], kind: "percent", color: "#dc2626" };
+    case "EBITDA 마진":
+      return { values: cf?.ebitda_margin ?? [], kind: "percent", color: "#dc2626" };
+    case "부채비율":
+      return { values: r.stability?.debt_ratio ?? [], kind: "percent", color: "#c62828" };
+    case "유동비율":
+      return { values: r.stability?.current_ratio ?? [], kind: "percent", color: "#1565c0" };
+    case "자기자본비율":
+      return { values: r.stability?.equity_ratio ?? [], kind: "percent", color: "#2e7d32" };
+    case "FCF 마진":
+      return { values: cf?.fcf_margin ?? [], kind: "percent", color: "#dc2626" };
+    case "Runway":
+      return { values: cf?.runway_months ?? [], kind: "month", color: "#eab308" };
+    case "이자보상배율":
+      return { values: cf?.interest_coverage ?? [], kind: "ratio_x", color: "#7c3aed" };
+    case "매출채권 회수기간":
+      return { values: r.activity?.ar_days ?? [], kind: "day", color: "#0891b2" };
+    default:
+      return undefined;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Inline cards — 새 schema 형식에 맞춰 간단히 렌더
 // ─────────────────────────────────────────────────────────────────
 
@@ -207,105 +277,6 @@ function LiteHeader({
         </div>
         <GenerateNarrativeButton id={corpCode} />
       </div>
-    </div>
-  );
-}
-
-function CategoryCard({ category }: { category: CategoryNarrative }) {
-  const sig = category.signal as Signal;
-  return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
-      <div className={cn("h-1 w-full", SIGNAL_BAR[sig])} />
-      <div className="flex flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-gray-900">
-            {category.name}
-          </h3>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-              SIGNAL_BG[sig]
-            )}
-          >
-            <span>{SIGNAL_DOT[sig]}</span>
-            {category.summary.replace(/^[^\s]+\s/, "")}
-          </span>
-        </div>
-        <p className="text-sm leading-relaxed text-gray-600">
-          <RichText text={category.comment} />
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function LiteCategoryCard({ category }: { category: LiteCategory }) {
-  const sig = category.signal;
-  return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-dashed border-[var(--border)] bg-white shadow-sm">
-      <div className={cn("h-1 w-full", SIGNAL_BAR[sig])} />
-      <div className="flex flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-gray-900">
-            {category.name}
-          </h3>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
-              SIGNAL_BG[sig]
-            )}
-          >
-            <span>{SIGNAL_DOT[sig]}</span>
-            {category.summary.replace(/^[^\s]+\s/, "")}
-          </span>
-        </div>
-        <p className="text-xs leading-relaxed text-gray-400">
-          AI 분석 생성 시 카테고리별 코멘트가 여기 표시됩니다.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function KpiCard({ kpi }: { kpi: ComputedTopKpi }) {
-  const sig = (kpi.signal ?? "yellow") as Signal;
-  const isPercent = kpi.unit === "%" || kpi.unit === "ratio";
-  const display = isPercent
-    ? fmtPct(kpi.value_latest, { digits: 2 })
-    : kpi.unit === "x"
-      ? `${kpi.value_latest?.toFixed(2)}x`
-      : kpi.unit === "month"
-        ? `${kpi.value_latest?.toFixed(1)}개월`
-        : kpi.unit === "day"
-          ? `${kpi.value_latest?.toFixed(0)}일`
-          : kpi.value_latest?.toLocaleString() ?? "-";
-  const yoyDisplay =
-    kpi.yoy != null ? fmtPct(kpi.yoy, { sign: true, digits: 1 }) : null;
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white p-5 shadow-sm">
-      <div className={cn("absolute inset-x-0 top-0 h-0.5", SIGNAL_BAR[sig])} />
-      <div className="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-        {kpi.label}
-      </div>
-      <div className="mt-1.5 flex items-baseline gap-1.5">
-        <span
-          className={cn(
-            "text-xl font-bold tabular-nums",
-            sig === "red"
-              ? "text-rose-700"
-              : sig === "yellow"
-                ? "text-amber-700"
-                : "text-emerald-700"
-          )}
-        >
-          {display}
-        </span>
-        <span className="text-[10px]">{SIGNAL_DOT[sig]}</span>
-      </div>
-      {yoyDisplay && (
-        <div className="mt-1 text-[11px] text-gray-500">YoY {yoyDisplay}</div>
-      )}
     </div>
   );
 }
