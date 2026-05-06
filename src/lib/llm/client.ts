@@ -76,7 +76,7 @@ export async function generateSection<T = unknown>(
   opts: GenerateOptions = {}
 ): Promise<GenerateResult<T>> {
   const client = getClient();
-  const dataContext = buildDataContext(raw, computed);
+  const dataContext = buildDataContext(raw, computed, section);
   const instruction = SECTION_PROMPTS[section];
 
   const model = client.getGenerativeModel({
