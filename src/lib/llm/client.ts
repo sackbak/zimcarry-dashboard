@@ -150,7 +150,7 @@ export async function generateSection<T = unknown>(
  */
 function sanitizeMarkup<T>(value: T): T {
   if (typeof value === "string") {
-    let s = value;
+    let s: string = value;
     // ==red==text==red== 류 HTML 태그 흉내 제거
     s = s.replace(/==red==/gi, "==");
     s = s.replace(/==danger==/gi, "==");
