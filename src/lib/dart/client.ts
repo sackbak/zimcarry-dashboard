@@ -162,15 +162,14 @@ export async function fetchFinancialStatementsAll(
 }
 
 /**
- * 5개년 사업보고서 일괄 조회. 2020~2024 등 연속 연도 하나씩 호출.
+ * 5개년 사업보고서 일괄 조회. years를 모두 동시 호출 (Promise.all).
  * 호출 횟수 = years.length. CFS 우선, 결과 없으면 OFS 재시도.
  */
 export async function fetchFiveYearStatements(
   corpCode: string,
   years: number[]
 ): Promise<{ year: number; data: DartFnAccount[] }[]> {
-  const out: { year: number; data: DartFnAccount[] }[] = [];
-  for (const year of years) {
+  const fetchOne = async (year: number) => {
     let resp: DartFnAccountResponse;
     try {
       resp = await fetchFinancialStatementsAll(
@@ -181,7 +180,6 @@ export async function fetchFiveYearStatements(
       );
     } catch (e) {
       if (e instanceof DartApiError && e.status === "013") {
-        // 연결재무제표 없음 — 단독으로 재시도
         resp = await fetchFinancialStatementsAll(
           corpCode,
           String(year),
@@ -192,7 +190,7 @@ export async function fetchFiveYearStatements(
         throw e;
       }
     }
-    out.push({ year, data: resp.list ?? [] });
-  }
-  return out;
+    return { year, data: resp.list ?? [] };
+  };
+  return Promise.all(years.map(fetchOne));
 }

@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import corpIndex from "@/data/corp-index.json";
 import { analyzeCompany } from "@/app/actions";
+import { AnalyzeButton, Spinner } from "@/components/AnalyzeButton";
 
 type Entry = { code: string; name: string; stock: string };
 
@@ -78,6 +79,9 @@ export function CompanyCombobox() {
       <p className="mt-1 text-xs text-gray-500">
         회사명 또는 종목코드 (예: 삼성전자, 005930, NAVER)
       </p>
+      <p className="mt-0.5 text-[11px] text-gray-400">
+        처음 분석하는 회사는 DART에서 5개년 가져오느라 5~10초 걸려요.
+      </p>
       <div className="mt-3 flex gap-2">
         <div className="relative flex-1">
           <input
@@ -127,13 +131,17 @@ export function CompanyCombobox() {
             </div>
           )}
         </div>
-        <button
-          type="submit"
+        <AnalyzeButton
           disabled={!selected}
           className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors enabled:hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-        >
-          분석 시작
-        </button>
+          idle="분석 시작"
+          pending={
+            <span className="inline-flex items-center gap-2">
+              <Spinner />
+              분석 중...
+            </span>
+          }
+        />
       </div>
       {selected && (
         <p className="mt-2 text-[11px] text-gray-500">

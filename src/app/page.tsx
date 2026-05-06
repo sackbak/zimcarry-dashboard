@@ -12,6 +12,7 @@ import Link from "next/link";
 import { listAvailableCompanies, loadAnalysis } from "@/lib/load-analysis";
 import { analyzeCompany } from "@/app/actions";
 import { CompanyCombobox } from "@/components/CompanyCombobox";
+import { AnalyzeButton, Spinner } from "@/components/AnalyzeButton";
 
 const SUGGESTIONS: { code: string; name: string; industry: string }[] = [
   { code: "00126380", name: "삼성전자", industry: "반도체·전자" },
@@ -78,13 +79,21 @@ export default async function HomePage({
               {SUGGESTIONS.map((s) => (
                 <form key={s.code} action={analyzeCompany}>
                   <input type="hidden" name="corp_code" value={s.code} />
-                  <button
-                    type="submit"
-                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700 transition-colors hover:border-gray-400 hover:bg-white"
-                  >
-                    {s.name}{" "}
-                    <span className="text-gray-400">· {s.industry}</span>
-                  </button>
+                  <AnalyzeButton
+                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700 transition-colors enabled:hover:border-gray-400 enabled:hover:bg-white disabled:opacity-70"
+                    idle={
+                      <>
+                        {s.name}{" "}
+                        <span className="text-gray-400">· {s.industry}</span>
+                      </>
+                    }
+                    pending={
+                      <span className="inline-flex items-center gap-1.5">
+                        <Spinner />
+                        {s.name} 분석 중...
+                      </span>
+                    }
+                  />
                 </form>
               ))}
             </div>
