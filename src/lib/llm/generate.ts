@@ -1,12 +1,8 @@
 /**
- * 회사 narrative 전체 생성 — 6번 호출을 sequential로 실행.
+ * 회사 narrative 전체 생성 — 7번 호출을 sequential로 실행.
  *
- * 캐싱 효과:
- *   - 호출 1 (top_verdict + categories): cache write
- *   - 호출 2~6: cache read (system + 데이터, ~95% 비용 절감)
- *
- * 호출은 순차 (parallel하면 cache write가 동시 발생해서 모두 full price).
- * 첫 응답이 시작되어야 cache가 다른 호출에서 readable.
+ * Gemini 2.5 Flash 사용 — free tier 안에선 비용 0, paid도 회사당 ~$0.04.
+ * 호출은 순차 (Gemini free tier RPM 제한 + 결과 안정성).
  */
 
 import { generateSection, type GenerateResult } from "@/lib/llm/client";
@@ -29,10 +25,10 @@ export type GenerateNarrativeOptions = {
 export type NarrativeUsage = {
   total_input_tokens: number;
   total_output_tokens: number;
-  total_cache_creation: number;
-  total_cache_read: number;
-  /** 추정 비용 USD (Opus 4.7 기준: $5/$25 + cache write 1.25× / cache read 0.1×) */
+  /** 추정 비용 USD (Gemini 2.5 Flash: $0.30/M input, $2.50/M output. Free tier 안이면 $0) */
   estimated_cost_usd: number;
+  /** free tier (1500 RPD)에 카운트되는 호출 수 */
+  request_count: number;
 };
 
 const SECTIONS = [
@@ -95,27 +91,26 @@ export async function generateNarrative(
       const u = results[s].usage;
       acc.total_input_tokens += u.input_tokens;
       acc.total_output_tokens += u.output_tokens;
-      acc.total_cache_creation += u.cache_creation_input_tokens;
-      acc.total_cache_read += u.cache_read_input_tokens;
       return acc;
     },
     {
       total_input_tokens: 0,
       total_output_tokens: 0,
-      total_cache_creation: 0,
-      total_cache_read: 0,
     }
   );
 
-  // Opus 4.7 pricing: $5/M input, $25/M output. Cache write 1.25× input, cache read 0.1× input.
+  // Gemini 2.5 Flash pricing: $0.30/M input, $2.50/M output (paid tier).
+  // Free tier 안이면 실제 비용 0.
   const cost =
-    (totals.total_input_tokens * 5) / 1_000_000 +
-    (totals.total_output_tokens * 25) / 1_000_000 +
-    (totals.total_cache_creation * 5 * 1.25) / 1_000_000 +
-    (totals.total_cache_read * 5 * 0.1) / 1_000_000;
+    (totals.total_input_tokens * 0.3) / 1_000_000 +
+    (totals.total_output_tokens * 2.5) / 1_000_000;
 
   return {
     narrative,
-    usage: { ...totals, estimated_cost_usd: cost },
+    usage: {
+      ...totals,
+      estimated_cost_usd: cost,
+      request_count: SECTIONS.length,
+    },
   };
 }

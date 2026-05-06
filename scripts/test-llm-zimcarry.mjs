@@ -14,17 +14,33 @@
  */
 
 import { writeFileSync, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error("ERROR: ANTHROPIC_API_KEY 환경변수 필요.");
-  console.error("  set ANTHROPIC_API_KEY=sk-... && node ... (Windows cmd)");
-  console.error("  $env:ANTHROPIC_API_KEY=\"sk-...\"; node ... (PowerShell)");
-  console.error("  ANTHROPIC_API_KEY=sk-... node ... (bash)");
+// .env.local 자동 로드
+const envPath = resolve(root, ".env.local");
+try {
+  const envText = readFileSync(envPath, "utf8");
+  for (const line of envText.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const val = trimmed.slice(eq + 1).trim();
+    if (val && !process.env[key]) process.env[key] = val;
+  }
+} catch {
+  // .env.local 없으면 무시 (env에 직접 set한 케이스)
+}
+
+if (!process.env.GEMINI_API_KEY) {
+  console.error("ERROR: GEMINI_API_KEY 환경변수 필요.");
+  console.error("  .env.local에 GEMINI_API_KEY=AIzaSy... 추가 후 재실행");
+  console.error("  발급: https://aistudio.google.com/app/apikey");
   process.exit(1);
 }
 
@@ -38,9 +54,9 @@ console.log(`  IS line items: ${Object.keys(analysis.raw.financials.income_state
 console.log(`  BS line items: ${Object.keys(analysis.raw.financials.balance_sheet).length}`);
 console.log("");
 
-// Dynamic import — 모듈이 .ts라 strip-types 필요
+// Dynamic import — 모듈이 .ts라 strip-types 필요. Windows는 file:// URL 변환 필수.
 const { generateNarrative } = await import(
-  resolve(root, "src/lib/llm/generate.ts")
+  pathToFileURL(resolve(root, "src/lib/llm/generate.ts")).href
 );
 
 const t0 = Date.now();
@@ -60,16 +76,11 @@ console.log("");
 console.log(`✓ 생성 완료 (${elapsed}s)`);
 console.log("");
 console.log("Usage:");
+console.log(`  request_count         ${usage.request_count} (free tier 1,500 RPD)`);
 console.log(`  input_tokens          ${usage.total_input_tokens.toLocaleString()}`);
 console.log(`  output_tokens         ${usage.total_output_tokens.toLocaleString()}`);
-console.log(`  cache_creation        ${usage.total_cache_creation.toLocaleString()}`);
-console.log(`  cache_read            ${usage.total_cache_read.toLocaleString()}`);
 console.log(`  estimated_cost_usd    $${usage.estimated_cost_usd.toFixed(4)} (~${(usage.estimated_cost_usd * 1300).toFixed(0)}원)`);
-console.log("");
-console.log("Cache hit ratio:");
-const totalInput = usage.total_input_tokens + usage.total_cache_creation + usage.total_cache_read;
-const cacheRatio = totalInput > 0 ? (usage.total_cache_read / totalInput) * 100 : 0;
-console.log(`  ${cacheRatio.toFixed(1)}% of input tokens served from cache`);
+console.log(`  (free tier 안이면 실제 0원)`);
 
 const outPath = resolve(root, "src/data/zimcarry_narrative_llm.json");
 writeFileSync(outPath, JSON.stringify(narrative, null, 2), "utf8");

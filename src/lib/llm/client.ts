@@ -1,20 +1,22 @@
 /**
- * Anthropic Claude API client wrapper for narrative generation.
+ * Google Gemini API client wrapper for narrative generation.
  *
- * 서버 사이드 전용 — API key는 환경변수 ANTHROPIC_API_KEY에서 읽음.
- * Next.js API route, server action, scripts에서만 import.
+ * 서버 사이드 전용 — API key는 환경변수 GEMINI_API_KEY에서 읽음.
  *
- * 모델: Claude Opus 4.7 (claude-opus-4-7)
- * Thinking: adaptive (Opus 4.7는 budget_tokens 제거됨)
- * Effort: high (재무 분석은 intelligence-sensitive)
+ * 모델: Gemini 2.5 Flash (gemini-2.5-flash)
+ *   - free tier: 1,500 RPD, 15 RPM, 1M TPM
+ *   - paid: $0.30/M input, $2.50/M output
+ *   - 회사당 ~$0.04 (free tier 안 들어가면 ~56원)
  *
- * 캐싱:
- *   - cache_control: ephemeral, 5분 TTL
- *   - 2 breakpoints: system 끝 + user 데이터 블록 끝
- *   - 회사당 첫 호출 cache write, 나머지 5번 cache read
+ * JSON 출력: responseMimeType: "application/json"으로 강제.
+ * 시스템 프롬프트: systemInstruction 필드 (모델 인스턴스 생성 시).
+ *
+ * 캐싱: Gemini는 context caching API 별도 제공하지만 32K+ 최소 prefix 필요.
+ *   현재 7-call 워크플로우는 prefix가 ~7K라서 캐싱 X — free tier에선 의미 없음.
+ *   유료 전환 + 큰 데이터일 때 별도 검토.
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   SYSTEM_PROMPT,
   buildDataContext,
@@ -26,26 +28,27 @@ import type {
   ComputedMetrics,
 } from "@/types/CompanyAnalysis";
 
-const MODEL = "claude-opus-4-7";
+const MODEL = "gemini-2.5-flash";
 
-let _client: Anthropic | null = null;
-function getClient(): Anthropic {
+let _client: GoogleGenerativeAI | null = null;
+function getClient(): GoogleGenerativeAI {
   if (_client) return _client;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "ANTHROPIC_API_KEY 환경변수 필요. .env.local 또는 Vercel env에 설정."
+      "GEMINI_API_KEY 환경변수 필요. .env.local 또는 Vercel env에 설정.\n" +
+        "발급: https://aistudio.google.com/app/apikey"
     );
   }
-  _client = new Anthropic({ apiKey });
+  _client = new GoogleGenerativeAI(apiKey);
   return _client;
 }
 
 export type GenerateOptions = {
   /** debug 로그 출력 */
   verbose?: boolean;
-  /** max_tokens (기본 16000, 큰 응답 예상 시 streaming + 64000) */
-  maxTokens?: number;
+  /** temperature (기본 0.3 — narrative 품질 + 약간의 변형 허용) */
+  temperature?: number;
 };
 
 export type GenerateResult<T = unknown> = {
@@ -53,7 +56,7 @@ export type GenerateResult<T = unknown> = {
   usage: {
     input_tokens: number;
     output_tokens: number;
-    cache_creation_input_tokens: number;
+    /** Gemini는 prompt cache 미사용 — 0 고정 */
     cache_read_input_tokens: number;
   };
   /** raw text response (parsing 실패 디버깅용) */
@@ -63,11 +66,8 @@ export type GenerateResult<T = unknown> = {
 /**
  * 한 section을 LLM으로 생성. JSON 응답을 parse해서 반환.
  *
- * 캐싱 패턴:
- *   - system: SYSTEM_PROMPT (cache breakpoint #1)
- *   - user: [데이터 블록 (cache breakpoint #2), instruction (no cache)]
- *
- * 같은 raw + computed로 다른 section 호출 시 데이터까지 cache hit.
+ * Gemini는 매 호출마다 systemInstruction + 데이터 다시 보내야 함 (캐싱 X).
+ * Free tier 안에선 비용 무관, paid에서도 회사당 ~$0.04로 부담 없음.
  */
 export async function generateSection<T = unknown>(
   section: SectionKey,
@@ -79,44 +79,52 @@ export async function generateSection<T = unknown>(
   const dataContext = buildDataContext(raw, computed);
   const instruction = SECTION_PROMPTS[section];
 
-  const response = await client.messages.create({
+  const model = client.getGenerativeModel({
     model: MODEL,
-    max_tokens: opts.maxTokens ?? 16000,
-    thinking: { type: "adaptive" },
-    output_config: { effort: "high" },
-    system: [
-      {
-        type: "text",
-        text: SYSTEM_PROMPT,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: dataContext,
-            cache_control: { type: "ephemeral" },
-          },
-          {
-            type: "text",
-            text: instruction,
-          },
-        ],
-      },
-    ],
+    systemInstruction: SYSTEM_PROMPT,
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: opts.temperature ?? 0.3,
+    },
   });
 
-  // Opus 4.7는 content가 thinking + text 블록 혼합 — text만 추출
-  const textBlocks = response.content.filter(
-    (b): b is Anthropic.TextBlock => b.type === "text"
-  );
-  const rawText = textBlocks.map((b) => b.text).join("\n");
+  // 503 Service Unavailable / 429 Rate Limit 자동 재시도 (exponential backoff).
+  const maxRetries = 4;
+  let result;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      result = await model.generateContent([
+        { text: dataContext },
+        { text: instruction },
+      ]);
+      break;
+    } catch (e: unknown) {
+      const err = e as { status?: number; message?: string };
+      const status = err.status;
+      const isRetryable =
+        status === 503 || status === 429 || status === 500 || status === 502;
+      if (!isRetryable || attempt === maxRetries) throw e;
+      const waitMs = Math.min(2 ** attempt * 1000, 16000);
+      if (opts.verbose) {
+        console.log(
+          `  [${section}] ${status} retry ${attempt + 1}/${maxRetries} in ${waitMs}ms...`
+        );
+      }
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
+  }
+  if (!result) throw new Error(`[${section}] result undefined after retries`);
+
+  const response = result.response;
+  const rawText = response.text();
+  const usage = response.usageMetadata;
 
   if (opts.verbose) {
-    console.log(`[${section}] usage:`, response.usage);
+    console.log(`[${section}] usage:`, {
+      prompt: usage?.promptTokenCount,
+      output: usage?.candidatesTokenCount,
+      total: usage?.totalTokenCount,
+    });
     console.log(`[${section}] raw text preview:`, rawText.slice(0, 200));
   }
 
@@ -125,11 +133,9 @@ export async function generateSection<T = unknown>(
   return {
     data,
     usage: {
-      input_tokens: response.usage.input_tokens,
-      output_tokens: response.usage.output_tokens,
-      cache_creation_input_tokens:
-        response.usage.cache_creation_input_tokens ?? 0,
-      cache_read_input_tokens: response.usage.cache_read_input_tokens ?? 0,
+      input_tokens: usage?.promptTokenCount ?? 0,
+      output_tokens: usage?.candidatesTokenCount ?? 0,
+      cache_read_input_tokens: 0,
     },
     raw_text: rawText,
   };
@@ -137,14 +143,13 @@ export async function generateSection<T = unknown>(
 
 /**
  * LLM 응답에서 JSON 추출 + parse.
- * Claude가 system 지시("코드 fence 없이 JSON만") 어기는 경우도 방어.
+ * Gemini는 responseMimeType: "application/json"이면 깨끗한 JSON 보내지만
+ * 만약을 위해 fence/prose 제거 방어 로직 유지.
  */
 function parseJsonResponse<T>(text: string, section: string): T {
   let cleaned = text.trim();
-  // ```json ... ``` 또는 ``` ... ``` 제거
   const fenceMatch = cleaned.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
   if (fenceMatch) cleaned = fenceMatch[1].trim();
-  // 앞뒤 prose 제거 — 첫 { 부터 마지막 } 까지 추출
   const firstBrace = cleaned.indexOf("{");
   const lastBrace = cleaned.lastIndexOf("}");
   if (firstBrace > 0 || lastBrace < cleaned.length - 1) {
