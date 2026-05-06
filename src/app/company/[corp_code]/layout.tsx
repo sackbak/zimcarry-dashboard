@@ -46,6 +46,7 @@ export default async function CompanyLayout({
 
   const navItems = [
     { href: `/company/${corp_code}`, label: "대시보드" },
+    { href: `/company/${corp_code}/investment`, label: "투자관점" },
     { href: `/company/${corp_code}/balance-sheet`, label: "재무상태표" },
     { href: `/company/${corp_code}/income-statement`, label: "손익계산서" },
     { href: `/company/${corp_code}/cash-flow`, label: "현금흐름표" },
