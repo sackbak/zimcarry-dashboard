@@ -8,7 +8,7 @@
  */
 
 import { notFound } from "next/navigation";
-import { loadAnalysis } from "@/lib/load-analysis";
+import { loadAnalysis, listAvailableCompanies } from "@/lib/load-analysis";
 import { balanceSections } from "@/lib/financial-sections";
 import { SectionCard } from "@/components/SectionCard";
 import { ItemTableSection } from "@/components/ItemTableSection";
@@ -17,6 +17,11 @@ import { fmtPct } from "@/lib/format";
 
 export const dynamicParams = true;
 export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  const ids = await listAvailableCompanies();
+  return ids.map((corp_code) => ({ corp_code }));
+}
 
 const SECTION_COLORS: Record<string, string> = {
   자산: "#1565c0",

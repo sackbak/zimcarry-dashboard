@@ -85,13 +85,13 @@ export async function fetchLiveAnalysis(
   return { raw, computed };
 }
 
-/** 정적 라우트 생성용 — 데이터 디렉토리에서 사용 가능한 ID 목록 추출. */
+/** 정적 라우트 생성용 — disk에 raw+computed 또는 analysis/narrative가 있으면 잡음. */
 export async function listAvailableCompanies(): Promise<string[]> {
   const { readdir } = await import("node:fs/promises");
   const files = await readdir(DATA_DIR);
   const ids = new Set<string>();
   for (const f of files) {
-    const m = f.match(/^(.+?)_(analysis|narrative)\.json$/);
+    const m = f.match(/^(.+?)_(analysis|narrative|raw|computed)\.json$/);
     if (m) ids.add(m[1]);
   }
   return Array.from(ids).sort();

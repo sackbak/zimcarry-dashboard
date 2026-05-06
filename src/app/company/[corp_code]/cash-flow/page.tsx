@@ -9,7 +9,7 @@
  */
 
 import { notFound } from "next/navigation";
-import { loadAnalysis } from "@/lib/load-analysis";
+import { loadAnalysis, listAvailableCompanies } from "@/lib/load-analysis";
 import { cashflowSections } from "@/lib/financial-sections";
 import { ItemTableSection } from "@/components/ItemTableSection";
 import { TrendChart } from "@/components/TrendChart";
@@ -18,6 +18,11 @@ import { fmtEok, fmtPct } from "@/lib/format";
 
 export const dynamicParams = true;
 export const revalidate = 86400;
+
+export async function generateStaticParams() {
+  const ids = await listAvailableCompanies();
+  return ids.map((corp_code) => ({ corp_code }));
+}
 
 export default async function CashFlowPage({
   params,
