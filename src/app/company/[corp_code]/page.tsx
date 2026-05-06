@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import {
   loadAnalysis,
   listAvailableCompanies,
+  recordView,
 } from "@/lib/load-analysis";
 import { HeadVerdict } from "@/components/HeadVerdict";
 import { TrendChart } from "@/components/TrendChart";
@@ -36,8 +37,11 @@ import type {
 } from "@/types/CompanyAnalysis";
 
 export const dynamicParams = true;
-/** 라이브 DART 호출 결과를 24시간 캐시 (재무제표는 분기/연 단위 갱신이라 충분). */
-export const revalidate = 86400;
+/**
+ * 매 방문마다 mtime 갱신해 "최근 본 회사" 정렬에 반영하려고 dynamic.
+ * 데이터 자체는 디스크 캐시에서 즉시 로드 (DART 재호출 없음).
+ */
+export const dynamic = "force-dynamic";
 /**
  * AI 분석 server action(generateAnalysis)이 7개 Gemini 동시 호출 중 max latency까지 기다림.
  * Vercel Hobby 기본 10초로는 부족하므로 60초까지 확장.
@@ -61,6 +65,8 @@ export default async function CompanyDashboard({
   } catch {
     notFound();
   }
+  // 방문 기록 (mtime 갱신) — 홈의 "이미 분석된 회사" 리스트가 최근 순으로 정렬됨
+  await recordView(corp_code);
 
   const { raw, computed, narrative } = analysis;
   const years = raw.meta.fiscal_years;
