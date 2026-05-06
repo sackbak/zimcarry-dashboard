@@ -11,10 +11,11 @@
 import Link from "next/link";
 import { listAvailableCompanies, loadAnalysis } from "@/lib/load-analysis";
 import { analyzeCompany } from "@/app/actions";
+import { CompanyCombobox } from "@/components/CompanyCombobox";
 
 const SUGGESTIONS: { code: string; name: string; industry: string }[] = [
   { code: "00126380", name: "삼성전자", industry: "반도체·전자" },
-  { code: "00266961", name: "네이버", industry: "인터넷 서비스" },
+  { code: "00266961", name: "NAVER", industry: "인터넷 서비스" },
   { code: "00164742", name: "현대자동차", industry: "자동차" },
   { code: "00126186", name: "삼성SDS", industry: "IT 서비스" },
 ];
@@ -61,45 +62,8 @@ export default async function HomePage({
           </p>
         </header>
 
-        <form
-          action={analyzeCompany}
-          className="mt-10 rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm md:p-8"
-        >
-          <label
-            htmlFor="corp_code"
-            className="block text-sm font-semibold text-gray-900"
-          >
-            DART corp_code
-          </label>
-          <p className="mt-1 text-xs text-gray-500">
-            8자리 숫자.{" "}
-            <a
-              href="https://opendart.fss.or.kr/disclosureinfo/company/search/searchUI.do"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              DART에서 회사 검색
-            </a>
-          </p>
-          <div className="mt-3 flex gap-2">
-            <input
-              id="corp_code"
-              name="corp_code"
-              type="text"
-              required
-              pattern="\d{8}"
-              maxLength={8}
-              placeholder="예: 00126380"
-              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-mono text-base shadow-sm outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            />
-            <button
-              type="submit"
-              className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-700"
-            >
-              분석 시작
-            </button>
-          </div>
+        <div className="mt-10 rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm md:p-8">
+          <CompanyCombobox />
           {error && (
             <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
               {error}
@@ -125,7 +89,7 @@ export default async function HomePage({
               ))}
             </div>
           </div>
-        </form>
+        </div>
 
         {validAnalyzed.length > 0 && (
           <section className="mt-12">
