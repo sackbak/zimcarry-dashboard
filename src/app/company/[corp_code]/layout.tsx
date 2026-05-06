@@ -7,6 +7,8 @@
 
 import { loadAnalysis } from "@/lib/load-analysis";
 import { MetaBar } from "@/components/MetaBar";
+import { DataGapsBadge } from "@/components/DataGapsBadge";
+import { detectDataGaps } from "@/lib/data-gaps";
 import Link from "next/link";
 
 export async function generateMetadata({
@@ -43,6 +45,7 @@ export default async function CompanyLayout({
     return <main className="p-8">{children}</main>;
   }
   const { raw } = analysis;
+  const gaps = detectDataGaps(raw);
 
   const navItems = [
     { href: `/company/${corp_code}`, label: "대시보드" },
@@ -59,9 +62,12 @@ export default async function CompanyLayout({
           <Link href="/" className="text-gray-500 hover:text-gray-900">
             ← 다른 회사 분석
           </Link>
-          <span className="text-gray-400">
-            {raw.meta.company_name} · corp_code {corp_code}
-          </span>
+          <div className="flex items-center gap-3">
+            <DataGapsBadge gaps={gaps} />
+            <span className="text-gray-400">
+              {raw.meta.company_name} · {corp_code}
+            </span>
+          </div>
         </nav>
         <MetaBar
           reportDate={raw.meta.report_date}

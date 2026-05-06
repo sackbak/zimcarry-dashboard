@@ -35,25 +35,43 @@ const IS_MAP: Record<string, keyof RawIncomeStatement> = {
   "ifrs-full_RevenueFromContractsWithCustomers": "revenue",
   "ifrs-full_CostOfSales": "cogs",
   "ifrs-full_GrossProfit": "gross_profit",
+  "dart_TotalSellingGeneralAdministrativeExpenses": "sga",
   "dart_OperatingIncomeLoss": "operating_income",
   "ifrs-full_ProfitLossFromOperatingActivities": "operating_income",
   "ifrs-full_ProfitLoss": "net_income",
+  "ifrs-full_ProfitLossFromContinuingOperations": "net_income",
   "ifrs-full_FinanceCosts": "interest_expense",
+  "ifrs-full_InterestExpense": "interest_expense",
+  // 감가상각·무형상각 — 사업보고서 IS에 보통 없지만 일부 회사 자체 ID로 공시
+  "dart_DepreciationExpense": "depreciation",
+  "ifrs-full_DepreciationExpense": "depreciation",
+  "dart_AmortisationExpense": "amortization",
+  "ifrs-full_AmortisationExpense": "amortization",
 };
 
-/** 한국어 account_nm fallback (account_id 매칭 실패 시) */
+/** 한국어 account_nm fallback (account_id 매칭 실패 시). 공백 제거 후 매칭. */
 const IS_NAME_MAP: Record<string, keyof RawIncomeStatement> = {
   "매출액": "revenue",
   "수익(매출액)": "revenue",
   "영업수익": "revenue",
+  "매출": "revenue",
   "매출원가": "cogs",
   "매출총이익": "gross_profit",
   "판매비와관리비": "sga",
+  "판관비": "sga",
   "영업이익": "operating_income",
   "영업이익(손실)": "operating_income",
+  "영업손실": "operating_income",
   "당기순이익": "net_income",
   "당기순이익(손실)": "net_income",
+  "당기순손실": "net_income",
+  "연결당기순이익": "net_income", // 현대차
+  "연결당기순이익(손실)": "net_income",
+  "연결당기순손실": "net_income",
+  "계속영업연결당기순이익": "net_income",
   "이자비용": "interest_expense",
+  "감가상각비": "depreciation",
+  "무형자산상각비": "amortization",
 };
 
 const BS_MAP: Record<string, keyof RawBalanceSheet> = {
@@ -61,34 +79,56 @@ const BS_MAP: Record<string, keyof RawBalanceSheet> = {
   "ifrs-full_CurrentAssets": "current_assets",
   "ifrs-full_CashAndCashEquivalents": "cash",
   "ifrs-full_TradeAndOtherCurrentReceivables": "ar",
+  "ifrs-full_TradeReceivables": "ar",
   "ifrs-full_NoncurrentAssets": "non_current",
   "ifrs-full_PropertyPlantAndEquipment": "tangible",
   "ifrs-full_IntangibleAssetsOtherThanGoodwill": "intangible",
+  "ifrs-full_IntangibleAssetsAndGoodwill": "intangible",
   "ifrs-full_Liabilities": "total_liab",
   "ifrs-full_CurrentLiabilities": "current_liab",
+  // 차입금 — DART는 한국식으로 비표준 매핑 사용
+  "ifrs-full_ShorttermBorrowings": "short_borrow",
+  "ifrs-full_CurrentBorrowings": "short_borrow",
+  "ifrs-full_NoncurrentPortionOfNoncurrentLoansReceived": "long_borrow",
+  "ifrs-full_NoncurrentBorrowings": "long_borrow",
+  "ifrs-full_LongTermBorrowings": "long_borrow",
   "ifrs-full_NoncurrentLiabilities": "non_current_liab",
   "ifrs-full_Equity": "total_equity",
   "ifrs-full_IssuedCapital": "capital_stock",
   "ifrs-full_RetainedEarnings": "retained_earnings",
+  // 자본잉여금
+  "dart_CapitalSurplus": "capital_surplus",
+  "ifrs-full_SharePremium": "capital_surplus",
+  "ifrs-full_AdditionalPaidinCapital": "capital_surplus",
 };
 
 const BS_NAME_MAP: Record<string, keyof RawBalanceSheet> = {
   "자산총계": "total_assets",
   "유동자산": "current_assets",
   "현금및현금성자산": "cash",
+  "현금밎현금성자산": "cash", // 일부 오타 케이스
   "매출채권": "ar",
+  "매출채권및기타채권": "ar",
   "비유동자산": "non_current",
   "유형자산": "tangible",
   "무형자산": "intangible",
   "부채총계": "total_liab",
   "유동부채": "current_liab",
   "단기차입금": "short_borrow",
+  "유동성장기차입금": "short_borrow", // NAVER 등 — 1년 내 만기 도래 장기차입금
+  "유동성장기부채": "short_borrow",
+  "단기사채": "short_borrow",
   "비유동부채": "non_current_liab",
   "장기차입금": "long_borrow",
+  "사채": "long_borrow",
+  "비유동사채": "long_borrow",
   "자본총계": "total_equity",
   "자본금": "capital_stock",
   "자본잉여금": "capital_surplus",
+  "주식발행초과금": "capital_surplus",
+  "자본준비금": "capital_surplus",
   "이익잉여금": "retained_earnings",
+  "이익잉여금(결손금)": "retained_earnings",
 };
 
 const CF_MAP: Record<string, keyof RawCashFlow> = {
