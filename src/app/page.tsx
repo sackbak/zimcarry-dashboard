@@ -13,6 +13,10 @@ import { listAvailableCompanies, loadAnalysis } from "@/lib/load-analysis";
 import { analyzeCompany } from "@/app/actions";
 import { CompanyCombobox } from "@/components/CompanyCombobox";
 import { AnalyzeButton, Spinner } from "@/components/AnalyzeButton";
+import { UploadForm } from "@/components/UploadForm";
+
+/** 업로드 추출(Gemini Vision/text)이 10~30초 걸려서 Hobby 기본 10s 부족. */
+export const maxDuration = 60;
 
 const SUGGESTIONS: { code: string; name: string; industry: string }[] = [
   { code: "00126380", name: "삼성전자", industry: "반도체·전자" },
@@ -64,7 +68,12 @@ export default async function HomePage({
         </header>
 
         <div className="mt-10 rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm md:p-8">
-          <CompanyCombobox />
+          <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+            상장사 (DART)
+          </div>
+          <div className="mt-3">
+            <CompanyCombobox />
+          </div>
           {error && (
             <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
               {error}
@@ -96,6 +105,15 @@ export default async function HomePage({
                   />
                 </form>
               ))}
+            </div>
+          </div>
+
+          <div className="mt-8 border-t border-gray-100 pt-6">
+            <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+              비상장사 (PDF · Excel)
+            </div>
+            <div className="mt-3">
+              <UploadForm />
             </div>
           </div>
         </div>

@@ -20,8 +20,80 @@ import { revalidatePath } from "next/cache";
 
 import { loadAnalysis } from "@/lib/load-analysis";
 import { generateNarrative } from "@/lib/llm/generate";
+import { extractFromFile, slugify } from "@/lib/extract/extract";
+import { computeMetrics } from "@/lib/computed";
 
 const DATA_DIR = path.join(process.cwd(), "src", "data");
+
+/**
+ * 비상장사 PDF/Excel 업로드 → LLM 추출 → raw + computed 저장 → /company/<slug> 리다이렉트.
+ *
+ * 비용: PDF ~15원, Excel은 텍스트 변환 후 LLM 호출이라 ~10원 (Gemini 2.5 Flash).
+ * narrative는 따로 — /company/<slug>에서 "AI 분석 생성" 버튼으로.
+ */
+export async function uploadCompanyFile(formData: FormData): Promise<void> {
+  const file = formData.get("file") as File | null;
+  if (!file || file.size === 0) {
+    redirect(`/?error=${encodeURIComponent("파일을 선택해주세요")}`);
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    redirect(`/?error=${encodeURIComponent("파일은 20MB 이하만 가능")}`);
+  }
+
+  const name = file.name.toLowerCase();
+  const isPdf = name.endsWith(".pdf") || file.type === "application/pdf";
+  const isExcel =
+    name.endsWith(".xlsx") ||
+    name.endsWith(".xls") ||
+    file.type.includes("sheet") ||
+    file.type.includes("excel");
+  if (!isPdf && !isExcel) {
+    redirect(
+      `/?error=${encodeURIComponent("PDF(.pdf) 또는 Excel(.xlsx, .xls)만 가능")}`
+    );
+  }
+
+  const buffer = await file.arrayBuffer();
+
+  let extracted;
+  try {
+    extracted = await extractFromFile({
+      kind: isPdf ? "pdf" : "excel",
+      buffer,
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    redirect(
+      `/?error=${encodeURIComponent(`추출 실패: ${msg.slice(0, 200)}`)}`
+    );
+  }
+
+  const { raw } = extracted;
+  if (!raw.meta.company_name || raw.meta.fiscal_years.length === 0) {
+    redirect(
+      `/?error=${encodeURIComponent("회사명·연도 추출 실패. 명확한 재무 자료인지 확인 필요.")}`
+    );
+  }
+
+  const computed = computeMetrics(raw);
+  const id = slugify(raw.meta.company_name);
+
+  await mkdir(DATA_DIR, { recursive: true });
+  await Promise.all([
+    writeFile(
+      path.join(DATA_DIR, `${id}_raw.json`),
+      JSON.stringify(raw, null, 2),
+      "utf8"
+    ),
+    writeFile(
+      path.join(DATA_DIR, `${id}_computed.json`),
+      JSON.stringify(computed, null, 2),
+      "utf8"
+    ),
+  ]);
+  revalidatePath(`/company/${id}`);
+  redirect(`/company/${id}`);
+}
 
 export async function analyzeCompany(formData: FormData): Promise<void> {
   const corpCode = String(formData.get("corp_code") ?? "").trim();
