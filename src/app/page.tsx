@@ -1,173 +1,183 @@
-import { data, years } from "@/lib/data";
-import { KPICard } from "@/components/KPICard";
-import { CategoryPanel } from "@/components/CategoryPanel";
-import { AssessmentBox } from "@/components/AssessmentBox";
-import { TrendChart } from "@/components/TrendChart";
-import { HeadVerdict } from "@/components/HeadVerdict";
-import { INSIGHTS } from "@/lib/insights";
+/**
+ * 홈페이지 — corp_code 입력 폼.
+ *
+ * 사용자가 DART corp_code 입력하면 server action이 자동으로:
+ *   DART fetch → transform → computed → JSON 저장 → /company/<id> 리다이렉트
+ *
+ * LLM narrative는 생성하지 않음 (비용 + Vercel 60s 제약).
+ * /company/<id>에 도착하면 거기서 "AI 분석 생성" 버튼 따로 제공.
+ */
 
-export default function DashboardPage() {
-  const { top_kpis, categories, overall_assessment } = data.dashboard;
-  const is = data.financials.income_statement;
-  const cf = data.financials.cash_flow;
-  const ratios = data.ratios;
+import Link from "next/link";
+import { listAvailableCompanies, loadAnalysis } from "@/lib/load-analysis";
+import { analyzeCompany } from "@/app/actions";
 
-  // Pull category signals to surface in head verdict KPI strip
-  const growth = categories.find((c) => c.name === "성장성");
-  const profit = categories.find((c) => c.name === "수익성");
-  const stab = categories.find((c) => c.name === "안정성");
-  const cash = categories.find((c) => c.name === "현금흐름");
+const SUGGESTIONS: { code: string; name: string; industry: string }[] = [
+  { code: "00126380", name: "삼성전자", industry: "반도체·전자" },
+  { code: "00266961", name: "네이버", industry: "인터넷 서비스" },
+  { code: "00164742", name: "현대자동차", industry: "자동차" },
+  { code: "00126186", name: "삼성SDS", industry: "IT 서비스" },
+];
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
+  // 이미 분석된 회사 목록
+  const ids = await listAvailableCompanies();
+  const analyzed = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const a = await loadAnalysis(id);
+        return {
+          id,
+          name: a.raw.meta.company_name,
+          industry: a.raw.company.industry,
+          hasNarrative: !!a.narrative,
+        };
+      } catch {
+        return null;
+      }
+    })
+  );
+  const validAnalyzed = analyzed.filter((x): x is NonNullable<typeof x> => !!x);
 
   return (
-    <div className="space-y-8">
-      <header>
-        <div className="text-xs font-medium uppercase tracking-wider text-gray-400">
-          Overview · {data.meta.data_period} (5개년)
-        </div>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
-          짐캐리 재무 대시보드
-        </h1>
-      </header>
+    <main className="min-h-screen bg-[var(--background)]">
+      <div className="mx-auto max-w-3xl px-4 py-16 md:py-24">
+        <header className="space-y-3">
+          <div className="text-xs font-medium uppercase tracking-widest text-gray-400">
+            Generic Financial Analyzer
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
+            한국 상장사 재무 대시보드
+          </h1>
+          <p className="text-sm leading-relaxed text-gray-600 md:text-base">
+            DART corp_code를 입력하면 5개년 재무제표 → 14개 비율 → 신호등
+            평가까지 자동 생성. 차트·KPI·라인아이템 그대로 짐캐리 프레임으로.
+          </p>
+        </header>
 
-      {/* HEAD VERDICT */}
-      <HeadVerdict
-        topic="종합"
-        status={overall_assessment.label.replace(/^[^\s]+\s/, "")}
-        signal={overall_assessment.signal}
-        headline="PMF 검증·손익 개선 중 — 단 자본·현금 구조는 외부 자금 100% 의존"
-        message={overall_assessment.summary}
-        asOfNote={`${data.meta.report_date} 기준 / 5개년 합산(${data.meta.data_period}) · 2025 결산`}
-        insight={INSIGHTS.dashboard_overall}
-        kpis={[
-          {
-            label: "매출 5년 성장",
-            value: `${ratios.growth.revenue_5y_multiple}x`,
-            signal: growth?.signal,
-            caption: "PMF 검증 (광고비 0.16%)",
-          },
-          {
-            label: "영업이익률 (2025)",
-            value: "-8.1%",
-            signal: profit?.signal,
-            caption: "-33% → -8% 빠른 개선",
-          },
-          {
-            label: "재무 안정성",
-            value: stab?.summary.replace(/^[^\s]+\s/, "") ?? "-",
-            signal: stab?.signal,
-            caption: "단기차입 91% · 자본잠식 2회",
-          },
-          {
-            label: "Runway",
-            value: `${cf.runway_months[4]?.toFixed(1)} 개월`,
-            signal: cash?.signal,
-            caption: "Bridge 증자로 재확보",
-          },
-        ]}
-      />
+        <form
+          action={analyzeCompany}
+          className="mt-10 rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm md:p-8"
+        >
+          <label
+            htmlFor="corp_code"
+            className="block text-sm font-semibold text-gray-900"
+          >
+            DART corp_code
+          </label>
+          <p className="mt-1 text-xs text-gray-500">
+            8자리 숫자.{" "}
+            <a
+              href="https://opendart.fss.or.kr/disclosureinfo/company/search/searchUI.do"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              DART에서 회사 검색
+            </a>
+          </p>
+          <div className="mt-3 flex gap-2">
+            <input
+              id="corp_code"
+              name="corp_code"
+              type="text"
+              required
+              pattern="\d{8}"
+              maxLength={8}
+              placeholder="예: 00126380"
+              className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-mono text-base shadow-sm outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            />
+            <button
+              type="submit"
+              className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-700"
+            >
+              분석 시작
+            </button>
+          </div>
+          {error && (
+            <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
 
-      {/* 5 categories */}
-      <section className="space-y-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-semibold text-gray-900">5대 재무 카테고리</h2>
-          <span className="text-xs text-gray-400">
-            성장성 / 수익성 / 안정성 / 활동성 / 현금흐름
-          </span>
-        </div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {categories.map((c) => (
-            <CategoryPanel key={c.name} category={c} />
-          ))}
-        </div>
-      </section>
+          <div className="mt-5 border-t border-gray-100 pt-4">
+            <div className="text-[11px] font-medium uppercase tracking-wider text-gray-400">
+              빠르게 시도해보기
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {SUGGESTIONS.map((s) => (
+                <form key={s.code} action={analyzeCompany}>
+                  <input type="hidden" name="corp_code" value={s.code} />
+                  <button
+                    type="submit"
+                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700 transition-colors hover:border-gray-400 hover:bg-white"
+                  >
+                    {s.name}{" "}
+                    <span className="text-gray-400">· {s.industry}</span>
+                  </button>
+                </form>
+              ))}
+            </div>
+          </div>
+        </form>
 
-      {/* Top KPIs — 클릭 시 5년 추이 + 정의 모달 */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-900">
-          핵심 KPI · 2025년
-          <span className="ml-2 text-xs font-normal text-gray-400">
-            카드 클릭 → 5년 추이 + 용어 정의
-          </span>
-        </h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {top_kpis.map((kpi) => {
-            const seriesMap: Record<
-              string,
-              { values: (number | null)[]; unit: string; color: string }
-            > = {
-              매출액: { values: is.revenue, unit: "백만원", color: "#0f172a" },
-              영업이익: {
-                values: is.operating_income,
-                unit: "백만원",
-                color: "#dc2626",
-              },
-              당기순이익: {
-                values: is.net_income,
-                unit: "백만원",
-                color: "#dc2626",
-              },
-              자본총계: {
-                values: data.financials.balance_sheet.total_equity,
-                unit: "백만원",
-                color: "#2e7d32",
-              },
-              현금성자산: {
-                values: data.financials.balance_sheet.cash,
-                unit: "백만원",
-                color: "#1565c0",
-              },
-              Runway: {
-                values: cf.runway_months,
-                unit: "개월",
-                color: "#eab308",
-              },
-            };
-            const meta = seriesMap[kpi.label];
-            return (
-              <KPICard
-                key={kpi.label}
-                kpi={kpi}
-                years={years}
-                series={meta?.values}
-                seriesUnit={meta?.unit}
-                color={meta?.color}
-              />
-            );
-          })}
-        </div>
-      </section>
+        {validAnalyzed.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+              이미 분석된 회사
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {validAnalyzed.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/company/${c.id}`}
+                  className="group rounded-xl border border-[var(--border)] bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
+                >
+                  <div className="flex items-baseline justify-between">
+                    <div className="font-semibold text-gray-900">{c.name}</div>
+                    <span className="text-[10px] font-mono text-gray-400">
+                      {c.id}
+                    </span>
+                  </div>
+                  {c.industry && (
+                    <div className="mt-1 text-xs text-gray-500">
+                      {c.industry}
+                    </div>
+                  )}
+                  <div className="mt-2 flex items-center gap-2">
+                    <span
+                      className={
+                        c.hasNarrative
+                          ? "rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-200"
+                          : "rounded-full bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600 ring-1 ring-gray-200"
+                      }
+                    >
+                      {c.hasNarrative ? "AI 분석 ✓" : "lite"}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* Scenarios + Trend */}
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <AssessmentBox assessment={overall_assessment} />
-        </div>
-        <div className="xl:col-span-1">
-          <TrendChart
-            years={years}
-            series={[
-              {
-                key: "revenue",
-                label: "매출",
-                color: "#0f172a",
-                values: is.revenue,
-              },
-              {
-                key: "op",
-                label: "영업이익",
-                color: "#94a3b8",
-                values: is.operating_income,
-              },
-              {
-                key: "fcf",
-                label: "FCF",
-                color: "#dc2626",
-                values: cf.fcf,
-              },
-            ]}
-          />
-        </div>
-      </section>
-    </div>
+        <footer className="mt-16 border-t border-gray-100 pt-6 text-xs text-gray-400">
+          <p>
+            데이터: OpenDART (한국 상장사 K-IFRS 5개년) · 비율 14종 결정적
+            계산 · 신호등 8개 vendor-neutral 임계값.
+          </p>
+          <p className="mt-1">
+            금융지주·은행·보험사는 IS/BS 구조가 달라 미지원. 신규 상장사(5년
+            미만)는 일부 지표 결측될 수 있음.
+          </p>
+        </footer>
+      </div>
+    </main>
   );
 }

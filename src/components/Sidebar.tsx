@@ -12,11 +12,12 @@ import {
 } from "lucide-react";
 
 const NAV = [
-  { href: "/", label: "대시보드", icon: LayoutDashboard },
+  { href: "/zimcarry", label: "대시보드", icon: LayoutDashboard },
   { href: "/balance-sheet", label: "재무상태표", icon: Scale },
   { href: "/income-statement", label: "손익계산서", icon: TrendingUp },
   { href: "/cash-flow", label: "현금흐름·투자지표", icon: Wallet },
   { href: "/glossary", label: "재무 용어집", icon: BookOpen },
+  { href: "/", label: "← 다른 회사 분석", icon: LayoutDashboard },
 ];
 
 export function Sidebar({

@@ -310,6 +310,7 @@ export interface CompanyContext {
 export interface CompanyAnalysis {
   raw: RawCompanyData;
   computed: ComputedMetrics;
-  narrative: CompanyNarrative;
+  /** LLM 생성 narrative — 동적 입력 모드에선 미생성 상태로 둘 수 있음 */
+  narrative?: CompanyNarrative;
   context?: CompanyContext;
 }
