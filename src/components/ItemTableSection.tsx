@@ -6,7 +6,7 @@ import { Sparkline } from "@/components/Sparkline";
 import { TrendChart } from "@/components/TrendChart";
 import { RichText, TermScope } from "@/components/RichText";
 import { tagStyle } from "@/lib/tags";
-import { fmtMil, fmtPct } from "@/lib/format";
+import { fmtScaled, fmtPct, pickMoneyScale } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type TableItem = {
@@ -36,6 +36,14 @@ export function ItemTableSection({
 }) {
   const [selected, setSelected] = useState<TableItem | null>(null);
 
+  let maxAbs = 0;
+  for (const item of items) {
+    for (const v of item.values_mil) {
+      if (v != null && Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+    }
+  }
+  const scale = pickMoneyScale(maxAbs);
+
   return (
     <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
       <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
@@ -43,7 +51,7 @@ export function ItemTableSection({
           <h3 className="text-base font-semibold text-gray-900">{title}</h3>
           {subtitle && <p className="mt-0.5 text-xs text-gray-500">{subtitle}</p>}
         </div>
-        <span className="text-[11px] text-gray-400">단위: 백만원 · 행 클릭 → 상세</span>
+        <span className="text-[11px] text-gray-400">단위: {scale.label}원 · 행 클릭 → 상세</span>
       </div>
 
       <div className="overflow-x-auto">
@@ -104,7 +112,7 @@ export function ItemTableSection({
                             : "text-gray-700"
                       )}
                     >
-                      {fmtMil(v)}
+                      {fmtScaled(v, scale)}
                     </td>
                   ))}
                   <td
@@ -140,7 +148,12 @@ export function ItemTableSection({
 
       <Modal open={selected != null} onClose={() => setSelected(null)}>
         {selected && (
-          <ItemDetail item={selected} years={years} accentColor={accentColor} />
+          <ItemDetail
+            item={selected}
+            years={years}
+            accentColor={accentColor}
+            scale={scale}
+          />
         )}
       </Modal>
     </div>
@@ -151,10 +164,12 @@ function ItemDetail({
   item,
   years,
   accentColor,
+  scale,
 }: {
   item: TableItem;
   years: number[];
   accentColor?: string;
+  scale: { divisor: number; label: string };
 }) {
   const ts = tagStyle(item.tag);
   const last = item.values_mil[item.values_mil.length - 1];
@@ -226,7 +241,7 @@ function ItemDetail({
 
       <div>
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-gray-400">
-          연도별 값 (백만원)
+          연도별 값 ({scale.label}원)
         </div>
         <div className="grid grid-cols-5 gap-1 rounded-lg border border-gray-100 bg-gray-50 p-2 text-center text-xs">
           {years.map((y, i) => (
@@ -242,7 +257,7 @@ function ItemDetail({
                       : "text-gray-900"
                 )}
               >
-                {fmtMil(item.values_mil[i])}
+                {fmtScaled(item.values_mil[i], scale)}
               </div>
             </div>
           ))}

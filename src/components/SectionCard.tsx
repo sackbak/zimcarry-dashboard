@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Sparkline } from "@/components/Sparkline";
 import { Modal } from "@/components/Modal";
 import { TrendChart } from "@/components/TrendChart";
-import { fmtEok, fmtMil, fmtPct } from "@/lib/format";
+import { fmtScaled, fmtPct, pickMoneyScale } from "@/lib/format";
 
 type SectionDetail = {
   short: string;
@@ -64,6 +64,13 @@ export function SectionCard({
   const info = SECTION_INFO[label];
   const hasDetail = !!info && !!years;
 
+  let maxAbs = total != null ? Math.abs(total) : 0;
+  for (const v of values) {
+    if (v != null && Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+  }
+  const scale = pickMoneyScale(maxAbs);
+  const totalDisplay = fmtScaled(total, scale);
+
   return (
     <>
       <button
@@ -106,7 +113,10 @@ export function SectionCard({
                 total != null && total < 0 ? "text-rose-600" : "text-gray-900"
               )}
             >
-              {fmtEok(total)}
+              {totalDisplay}
+              <span className="ml-1 text-[11px] font-medium text-gray-400">
+                {scale.label}
+              </span>
             </span>
             {yoy != null && (
               <span
@@ -148,7 +158,10 @@ export function SectionCard({
                     total != null && total < 0 ? "text-rose-600" : "text-gray-900"
                   )}
                 >
-                  {fmtEok(total)}
+                  {totalDisplay}
+                  <span className="ml-1 text-[11px] font-medium text-gray-400">
+                    {scale.label}
+                  </span>
                 </span>
                 {yoy != null && (
                   <span
@@ -192,7 +205,6 @@ export function SectionCard({
                     values,
                   },
                 ]}
-                unitLabel="백만원"
               />
               <div className="mt-2 grid grid-cols-5 gap-1 text-center text-[11px]">
                 {years.map((y, i) => (
@@ -211,7 +223,7 @@ export function SectionCard({
                             : "text-gray-900"
                       )}
                     >
-                      {fmtMil(values[i])}
+                      {fmtScaled(values[i], scale)}
                     </div>
                   </div>
                 ))}

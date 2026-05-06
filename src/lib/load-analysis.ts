@@ -25,7 +25,19 @@ import {
 import { buildRawFromDart } from "@/lib/dart/transform";
 import { computeMetrics } from "@/lib/computed";
 
-const LIVE_YEARS = [2020, 2021, 2022, 2023, 2024];
+/**
+ * 현재 시점 기준으로 5개년 산출.
+ * K-IFRS 사업보고서 신고 마감 = 다음 해 3월 31일. 4월 이후엔 직전 회계연도 잡힌다고 가정.
+ *   2026-04 이후 → [2021..2025]
+ *   2026-01~03 → [2020..2024]
+ */
+function getDefaultYears(): number[] {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const latest = month >= 4 ? year - 1 : year - 2;
+  return [latest - 4, latest - 3, latest - 2, latest - 1, latest];
+}
 
 const DATA_DIR = path.join(process.cwd(), "src", "data");
 
@@ -71,16 +83,18 @@ export async function loadAnalysis(id: string): Promise<CompanyAnalysis> {
 export async function fetchLiveAnalysis(
   corpCode: string
 ): Promise<CompanyAnalysis> {
+  const years = getDefaultYears();
   const info = await fetchCompanyInfo(corpCode);
-  const yearly = await fetchFiveYearStatements(corpCode, LIVE_YEARS);
-  const filledYears = yearly.filter((y) => y.data.length > 0).length;
-  if (filledYears === 0) {
+  const yearly = await fetchFiveYearStatements(corpCode, years);
+  // 데이터 있는 연도만 살림 — 최신 연도가 아직 신고 안 된 회사 graceful 처리.
+  const filled = yearly.filter((y) => y.data.length > 0);
+  if (filled.length === 0) {
     throw new Error(
-      `${info.corp_name}: DART에 5개년 K-IFRS 데이터 없음 (금융사·신규 상장사 등 미지원)`
+      `${info.corp_name}: DART에 K-IFRS 데이터 없음 (금융사·신규 상장사 등 미지원)`
     );
   }
   const reportDate = new Date().toISOString().slice(0, 10);
-  const raw = buildRawFromDart(info, yearly, reportDate);
+  const raw = buildRawFromDart(info, filled, reportDate);
   const computed = computeMetrics(raw);
   return { raw, computed };
 }

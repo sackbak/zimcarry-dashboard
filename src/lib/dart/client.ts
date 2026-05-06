@@ -170,27 +170,33 @@ export async function fetchFiveYearStatements(
   years: number[]
 ): Promise<{ year: number; data: DartFnAccount[] }[]> {
   const fetchOne = async (year: number) => {
-    let resp: DartFnAccountResponse;
     try {
-      resp = await fetchFinancialStatementsAll(
+      const resp = await fetchFinancialStatementsAll(
         corpCode,
         String(year),
         "11011",
         "CFS"
       );
-    } catch (e) {
-      if (e instanceof DartApiError && e.status === "013") {
-        resp = await fetchFinancialStatementsAll(
+      return { year, data: resp.list ?? [] };
+    } catch (e1) {
+      if (!(e1 instanceof DartApiError) || e1.status !== "013") throw e1;
+      // 연결재무제표 없음 — 단독 재시도
+      try {
+        const resp = await fetchFinancialStatementsAll(
           corpCode,
           String(year),
           "11011",
           "OFS"
         );
-      } else {
-        throw e;
+        return { year, data: resp.list ?? [] };
+      } catch (e2) {
+        // 단독도 없음 — 신고 안 됐거나 미상장 시기 → 빈 배열로 graceful skip
+        if (e2 instanceof DartApiError && e2.status === "013") {
+          return { year, data: [] };
+        }
+        throw e2;
       }
     }
-    return { year, data: resp.list ?? [] };
   };
   return Promise.all(years.map(fetchOne));
 }

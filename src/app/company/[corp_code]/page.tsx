@@ -32,6 +32,11 @@ import type {
 export const dynamicParams = true;
 /** 라이브 DART 호출 결과를 24시간 캐시 (재무제표는 분기/연 단위 갱신이라 충분). */
 export const revalidate = 86400;
+/**
+ * AI 분석 server action(generateAnalysis)이 7개 Gemini 동시 호출 중 max latency까지 기다림.
+ * Vercel Hobby 기본 10초로는 부족하므로 60초까지 확장.
+ */
+export const maxDuration = 60;
 
 export async function generateStaticParams() {
   const ids = await listAvailableCompanies();

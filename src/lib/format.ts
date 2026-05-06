@@ -4,6 +4,41 @@
  */
 
 const NF = new Intl.NumberFormat("ko-KR");
+const NF1 = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 1 });
+
+/**
+ * 차트·표 단위 자동 스케일. 입력은 백만원, 절댓값 최대치 기준.
+ *   max >= 1조 (1,000,000백만)   → 조 단위 (÷ 1,000,000)
+ *   max >= 100억 (10,000백만)    → 억 단위 (÷ 100)
+ *   else                         → 백만원 그대로
+ */
+export function pickMoneyScale(maxAbsMil: number): {
+  divisor: number;
+  label: string;
+} {
+  if (!Number.isFinite(maxAbsMil) || maxAbsMil <= 0) {
+    return { divisor: 1, label: "백만원" };
+  }
+  if (maxAbsMil >= 1_000_000) return { divisor: 1_000_000, label: "조" };
+  if (maxAbsMil >= 10_000) return { divisor: 100, label: "억" };
+  return { divisor: 1, label: "백만" };
+}
+
+/** 백만원 값 + 스케일 → 표시 문자열. null/undefined → "-" */
+export function fmtScaled(
+  value: number | null | undefined,
+  scale: { divisor: number; label: string },
+  opts?: { sign?: boolean; digits?: number }
+): string {
+  if (value == null) return "-";
+  const scaled = value / scale.divisor;
+  const digits = opts?.digits ?? (scale.divisor >= 100 ? 1 : 0);
+  const fmt = digits > 0 ? NF1 : NF;
+  const sign = opts?.sign && scaled > 0 ? "+" : "";
+  const rounded =
+    digits > 0 ? Number(scaled.toFixed(digits)) : Math.round(scaled);
+  return `${sign}${fmt.format(rounded)}`;
+}
 
 export function fmtMil(value: number | null | undefined, opts?: { sign?: boolean }): string {
   if (value == null) return "-";

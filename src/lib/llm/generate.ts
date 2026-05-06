@@ -1,8 +1,11 @@
 /**
- * 회사 narrative 전체 생성 — 7번 호출을 sequential로 실행.
+ * 회사 narrative 전체 생성 — 7개 section을 모두 동시 호출 (Promise.all).
  *
  * Gemini 2.5 Flash 사용 — free tier 안에선 비용 0, paid도 회사당 ~$0.04.
- * 호출은 순차 (Gemini free tier RPM 제한 + 결과 안정성).
+ * Free tier 15 RPM 이내라 7개 동시 호출 안전. 7 section 모두 독립적
+ * (raw + computed만 입력, 서로 결과 참조 안 함).
+ *
+ * 시간: sequential 2~3분 → parallel 30~60초 (max latency에 수렴).
  */
 
 import { generateSection, type GenerateResult } from "@/lib/llm/client";
@@ -47,16 +50,19 @@ export async function generateNarrative(
   opts: GenerateNarrativeOptions = {}
 ): Promise<{ narrative: CompanyNarrative; usage: NarrativeUsage }> {
   const total = SECTIONS.length;
-  const results: Record<string, GenerateResult> = {};
+  if (opts.verbose) console.log(`[${total} sections] 동시 호출 시작...`);
 
-  for (let i = 0; i < SECTIONS.length; i++) {
-    const section = SECTIONS[i];
-    opts.onProgress?.(section, i, total);
-    if (opts.verbose) console.log(`[${i + 1}/${total}] ${section}...`);
-    results[section] = await generateSection(section, raw, computed, {
-      verbose: opts.verbose,
-    });
-  }
+  const settled = await Promise.all(
+    SECTIONS.map(async (section, i) => {
+      opts.onProgress?.(section, i, total);
+      const r = await generateSection(section, raw, computed, {
+        verbose: opts.verbose,
+      });
+      if (opts.verbose) console.log(`  [${i + 1}/${total}] ${section} done`);
+      return [section, r] as const;
+    })
+  );
+  const results: Record<string, GenerateResult> = Object.fromEntries(settled);
 
   // 결과 조합
   const tvc = results.top_verdict_and_categories.data as {
