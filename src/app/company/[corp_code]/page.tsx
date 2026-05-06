@@ -19,7 +19,13 @@ import { HeadVerdict } from "@/components/HeadVerdict";
 import { TrendChart } from "@/components/TrendChart";
 import { RichText } from "@/components/RichText";
 import { GenerateNarrativeButton } from "@/components/GenerateNarrativeButton";
-import { SIGNAL_BAR, SIGNAL_BG, SIGNAL_DOT } from "@/lib/signal";
+import {
+  SIGNAL_BAR,
+  SIGNAL_BG,
+  SIGNAL_DOT,
+  computeLiteCategories,
+  type LiteCategory,
+} from "@/lib/signal";
 import { fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Signal } from "@/lib/data";
@@ -93,24 +99,31 @@ export default async function CompanyDashboard({
         <LiteHeader corpCode={corp_code} years={years} reportDate={raw.meta.report_date} />
       )}
 
-      {/* 5 categories — narrative 있을 때만 (LLM 의존) */}
-      {narrative && (
-        <section className="space-y-3">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-base font-semibold text-gray-900">
-              5대 재무 카테고리
-            </h2>
-            <span className="text-xs text-gray-400">
-              성장성 / 수익성 / 안정성 / 활동성 / 현금흐름
-            </span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-            {narrative.categories.map((c) => (
-              <CategoryCard key={c.name} category={c} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* 5 categories — narrative 있으면 LLM 코멘트, 없으면 결정적 신호등만 */}
+      <section className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-base font-semibold text-gray-900">
+            5대 재무 카테고리
+            {!narrative && (
+              <span className="ml-2 text-[11px] font-medium text-amber-600">
+                · 신호등만 (AI 분석 시 코멘트 추가)
+              </span>
+            )}
+          </h2>
+          <span className="text-xs text-gray-400">
+            성장성 / 수익성 / 안정성 / 활동성 / 현금흐름
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {narrative
+            ? narrative.categories.map((c) => (
+                <CategoryCard key={c.name} category={c} />
+              ))
+            : computeLiteCategories(computed).map((c) => (
+                <LiteCategoryCard key={c.name} category={c} />
+              ))}
+        </div>
+      </section>
 
       {/* Top KPIs — 결정적, 항상 표시 */}
       <section className="space-y-3">
@@ -187,8 +200,8 @@ function LiteHeader({
             insight)이 필요하면 오른쪽 버튼을 누르세요.
           </p>
           <p className="text-[11px] text-gray-500">
-            ⚠ 1회 호출당 약 70원 (Gemini 2.5 Flash) · 7번 sequential 호출 ·
-            약 2~3분 소요 · {years.length}개년 ({years[0]}~{years.at(-1)}) ·{" "}
+            ⚠ 회사당 약 30원 (Gemini 2.5 Flash) · 7개 호출 동시 ·
+            약 30~60초 소요 · {years.length}개년 ({years[0]}~{years.at(-1)}) ·{" "}
             {reportDate} 기준 · <span className="font-mono">{corpCode}</span>
           </p>
         </div>
@@ -220,6 +233,34 @@ function CategoryCard({ category }: { category: CategoryNarrative }) {
         </div>
         <p className="text-sm leading-relaxed text-gray-600">
           <RichText text={category.comment} />
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function LiteCategoryCard({ category }: { category: LiteCategory }) {
+  const sig = category.signal;
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-dashed border-[var(--border)] bg-white shadow-sm">
+      <div className={cn("h-1 w-full", SIGNAL_BAR[sig])} />
+      <div className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-gray-900">
+            {category.name}
+          </h3>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium",
+              SIGNAL_BG[sig]
+            )}
+          >
+            <span>{SIGNAL_DOT[sig]}</span>
+            {category.summary.replace(/^[^\s]+\s/, "")}
+          </span>
+        </div>
+        <p className="text-xs leading-relaxed text-gray-400">
+          AI 분석 생성 시 카테고리별 코멘트가 여기 표시됩니다.
         </p>
       </div>
     </div>
