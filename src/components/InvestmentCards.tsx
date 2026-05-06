@@ -14,6 +14,7 @@ import { fmtPct, fmtScaled, pickMoneyScale } from "@/lib/format";
 import { SIGNAL_BAR } from "@/lib/signal";
 import type { Signal } from "@/lib/data";
 import type { VCMetrics } from "@/lib/vc";
+import type { ValuationResult, MultipleRange } from "@/lib/valuation";
 
 // ─── Generic wrapper ──────────────────────────────────────────────
 
@@ -558,6 +559,250 @@ export function LiquidationCard({ vc }: { vc: VCMetrics }) {
         </p>
       </ModalShell>
     </>
+  );
+}
+
+// ─── Valuation ───────────────────────────────────────────────────
+
+function fmtRange(
+  range: MultipleRange | null,
+  scale: { divisor: number; label: string }
+): string {
+  if (!range) return "-";
+  return `${fmtScaled(range.low, scale)} ~ ${fmtScaled(range.high, scale)}`;
+}
+
+export function ValuationCard({ valuation }: { valuation: ValuationResult }) {
+  const [open, setOpen] = useState(false);
+  const v = valuation;
+  const scale = pickMoneyScale(
+    Math.max(
+      Math.abs(v.ev_from_ebitda?.high ?? 0),
+      Math.abs(v.ev_from_sales?.high ?? 0),
+      Math.abs(v.blended_ev_mid_mil ?? 0)
+    )
+  );
+
+  const blendedDisplay =
+    v.blended_ev_mid_mil != null
+      ? `${fmtScaled(v.blended_ev_mid_mil, scale)} ${scale.label}`
+      : "-";
+  const equityDisplay =
+    v.blended_equity_mid_mil != null
+      ? `${fmtScaled(v.blended_equity_mid_mil, scale)} ${scale.label}`
+      : "-";
+
+  return (
+    <>
+      <MetricButton onClick={() => setOpen(true)}>
+        <div className="p-6">
+          <div className="flex items-start justify-between">
+            <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+              밸류에이션 추정 ({v.industry.label})
+            </div>
+            <Search3 />
+          </div>
+          <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div>
+              <div className="text-[10px] text-gray-500">EV (기업가치) 중간값</div>
+              <div className="mt-1 text-2xl font-bold tabular-nums text-gray-900">
+                {blendedDisplay}
+              </div>
+              <div className="mt-1 text-[11px] text-gray-500">
+                EV/EBITDA mid + EV/Sales mid 평균
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] text-gray-500">Equity (지분가치) 중간값</div>
+              <div className="mt-1 text-2xl font-bold tabular-nums text-gray-900">
+                {equityDisplay}
+              </div>
+              <div className="mt-1 text-[11px] text-gray-500">
+                EV − net debt
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded-md bg-gray-50 p-2">
+              <div className="text-[10px] text-gray-500">EV/EBITDA 범위</div>
+              <div className="font-semibold text-gray-900">
+                {v.ebitda_negative
+                  ? "EBITDA 음수 — 미적용"
+                  : fmtRange(v.ev_from_ebitda, scale)}{" "}
+                <span className="text-[10px] text-gray-400">{scale.label}</span>
+              </div>
+            </div>
+            <div className="rounded-md bg-gray-50 p-2">
+              <div className="text-[10px] text-gray-500">EV/Sales 범위</div>
+              <div className="font-semibold text-gray-900">
+                {fmtRange(v.ev_from_sales, scale)}{" "}
+                <span className="text-[10px] text-gray-400">{scale.label}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </MetricButton>
+
+      <ModalShell
+        open={open}
+        onClose={() => setOpen(false)}
+        title="밸류에이션 추정"
+      >
+        <DefinitionBox>
+          M&A·투자 가격 협상의 1차 시작점. 산업 표준 multiple을 회사의 EBITDA·매출에 곱해
+          <strong> EV(기업가치) 범위 → Equity(지분가치) 범위</strong>를 산출.
+          <div className="mt-2 text-[12px]">
+            <code className="block rounded bg-white px-1.5 py-1 font-mono">
+              EV = EBITDA × multiple_EBITDA  (또는 매출 × multiple_Sales)
+            </code>
+            <code className="mt-1 block rounded bg-white px-1.5 py-1 font-mono">
+              Equity = EV − Net Debt  (Net Debt = 차입금 − 현금)
+            </code>
+          </div>
+        </DefinitionBox>
+
+        <div className="rounded-lg border border-gray-200 p-3">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+            적용 산업 · {v.industry.label}
+          </div>
+          <table className="mt-2 w-full text-sm">
+            <thead className="text-[10px] uppercase tracking-wider text-gray-400">
+              <tr>
+                <th className="text-left">기준</th>
+                <th className="text-right">Low</th>
+                <th className="text-right">Mid</th>
+                <th className="text-right">High</th>
+              </tr>
+            </thead>
+            <tbody className="text-gray-700">
+              <tr className="border-t border-gray-100">
+                <td className="py-1.5 font-medium">EV / EBITDA</td>
+                <td className="py-1.5 text-right tabular-nums">
+                  {v.industry.ev_ebitda.low}x
+                </td>
+                <td className="py-1.5 text-right tabular-nums">
+                  {v.industry.ev_ebitda.mid}x
+                </td>
+                <td className="py-1.5 text-right tabular-nums">
+                  {v.industry.ev_ebitda.high}x
+                </td>
+              </tr>
+              <tr className="border-t border-gray-100">
+                <td className="py-1.5 font-medium">EV / Sales</td>
+                <td className="py-1.5 text-right tabular-nums">
+                  {v.industry.ev_sales.low}x
+                </td>
+                <td className="py-1.5 text-right tabular-nums">
+                  {v.industry.ev_sales.mid}x
+                </td>
+                <td className="py-1.5 text-right tabular-nums">
+                  {v.industry.ev_sales.high}x
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
+            {v.industry.notes}
+          </p>
+        </div>
+
+        <ValuationBreakdown valuation={v} />
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <HealthBox tone="good" label="활용법">
+            High 값은 가격 협상의 ceiling, Low는 floor. Mid는 통상 1차 제안. peer comp +
+            DCF로 검증.
+          </HealthBox>
+          <HealthBox tone="bad" label="주의">
+            EBITDA 음수면 EV/EBITDA 무효. 적자 기업은 EV/Sales + DCF로만. control premium·
+            non-recurring 항목 별도 조정.
+          </HealthBox>
+        </div>
+
+        <p className="text-[11px] text-gray-500">
+          ※ 산업별 multiple은 Korea market median 표준치 (2024~2025 기준 보수적 합의 범위).
+          실제 거래는 회사 특수성·딜 구조·시장 환경에 따라 ±50% 변동. 본 dashboard는
+          range 시작점만 제공.
+        </p>
+      </ModalShell>
+    </>
+  );
+}
+
+function ValuationBreakdown({ valuation }: { valuation: ValuationResult }) {
+  const v = valuation;
+  const scale = pickMoneyScale(
+    Math.max(
+      Math.abs(v.ev_from_ebitda?.high ?? 0),
+      Math.abs(v.ev_from_sales?.high ?? 0),
+      Math.abs(v.inputs.revenue_mil ?? 0)
+    )
+  );
+  return (
+    <div className="rounded-lg border border-gray-200">
+      <div className="border-b border-gray-200 bg-gray-50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+        계산 내역 (단위: {scale.label}원)
+      </div>
+      <table className="w-full text-sm">
+        <tbody className="divide-y divide-gray-100">
+          <tr>
+            <td className="px-3 py-2 text-gray-600">최근 EBITDA</td>
+            <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+              {v.ebitda_negative ? "음수 — multiple 미적용" : fmtScaled(v.inputs.ebitda_mil, scale)}
+            </td>
+          </tr>
+          <tr>
+            <td className="px-3 py-2 text-gray-600">최근 매출</td>
+            <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+              {fmtScaled(v.inputs.revenue_mil, scale)}
+            </td>
+          </tr>
+          <tr>
+            <td className="px-3 py-2 text-gray-600">총 차입금 (단기 + 장기)</td>
+            <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+              {fmtScaled(v.inputs.total_debt_mil, scale)}
+            </td>
+          </tr>
+          <tr>
+            <td className="px-3 py-2 text-gray-600">(−) 현금</td>
+            <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+              {fmtScaled(v.inputs.cash_mil, scale)}
+            </td>
+          </tr>
+          <tr className="bg-gray-50">
+            <td className="px-3 py-2 font-semibold text-gray-900">Net Debt</td>
+            <td className="px-3 py-2 text-right font-semibold tabular-nums text-gray-900">
+              {fmtScaled(v.inputs.net_debt_mil, scale)}
+            </td>
+          </tr>
+          <tr className="border-t-2 border-gray-200">
+            <td className="px-3 py-2 font-semibold text-gray-900">EV (EBITDA Mid)</td>
+            <td className="px-3 py-2 text-right font-semibold tabular-nums text-gray-900">
+              {v.ebitda_negative ? "—" : fmtScaled(v.ev_from_ebitda?.mid ?? null, scale)}
+            </td>
+          </tr>
+          <tr>
+            <td className="px-3 py-2 font-semibold text-gray-900">EV (Sales Mid)</td>
+            <td className="px-3 py-2 text-right font-semibold tabular-nums text-gray-900">
+              {fmtScaled(v.ev_from_sales?.mid ?? null, scale)}
+            </td>
+          </tr>
+          <tr className="border-t-2 border-gray-300 bg-blue-50/40">
+            <td className="px-3 py-2 font-bold text-gray-900">Blended EV Mid</td>
+            <td className="px-3 py-2 text-right text-lg font-bold tabular-nums text-gray-900">
+              {fmtScaled(v.blended_ev_mid_mil, scale)}
+            </td>
+          </tr>
+          <tr className="bg-blue-50/40">
+            <td className="px-3 py-2 font-bold text-gray-900">Blended Equity Mid</td>
+            <td className="px-3 py-2 text-right text-lg font-bold tabular-nums text-blue-700">
+              {fmtScaled(v.blended_equity_mid_mil, scale)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
 

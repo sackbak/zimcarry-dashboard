@@ -7,6 +7,7 @@
 import { notFound } from "next/navigation";
 import { loadAnalysis, listAvailableCompanies } from "@/lib/load-analysis";
 import { computeVCMetrics } from "@/lib/vc";
+import { computeValuation } from "@/lib/valuation";
 import { TrendChart } from "@/components/TrendChart";
 import {
   CapitalEfficiencyCard,
@@ -17,6 +18,7 @@ import {
   LiquidationCard,
   AssetLightCard,
   CapitalHistoryCard,
+  ValuationCard,
 } from "@/components/InvestmentCards";
 
 export const dynamicParams = true;
@@ -41,6 +43,7 @@ export default async function InvestmentPage({
   }
   const { raw, computed } = analysis;
   const vc = computeVCMetrics(raw, computed);
+  const valuation = computeValuation(raw, computed);
   const years = raw.meta.fiscal_years;
   const lastYear = years.at(-1);
 
@@ -54,10 +57,21 @@ export default async function InvestmentPage({
           {raw.meta.company_name} · 투자 관점
         </h1>
         <p className="mt-1 text-xs text-gray-500">
-          VC가 보는 지표 — 자본효율 / Burn / BEP / 청산가치 / Asset-light. 카드 클릭 시
+          M&A·VC 관점 — 밸류에이션 / 자본효율 / Burn / BEP / 청산가치. 카드 클릭 시
           정의·계산식·해석. 모두 결정적 계산, AI 분석 안 들어감.
         </p>
       </header>
+
+      {/* 밸류에이션 — M&A 가격 협상 시작점 */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">
+          밸류에이션 추정
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            EV/EBITDA + EV/Sales 기반
+          </span>
+        </h2>
+        <ValuationCard valuation={valuation} />
+      </section>
 
       {/* Hero — 자본 효율성 + BEP 도달 */}
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
