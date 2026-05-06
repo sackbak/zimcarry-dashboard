@@ -44,6 +44,13 @@ export default async function CompanyLayout({
   }
   const { raw } = analysis;
 
+  const navItems = [
+    { href: `/company/${corp_code}`, label: "대시보드" },
+    { href: `/company/${corp_code}/balance-sheet`, label: "재무상태표" },
+    { href: `/company/${corp_code}/income-statement`, label: "손익계산서" },
+    { href: `/company/${corp_code}/cash-flow`, label: "현금흐름표" },
+  ];
+
   return (
     <main>
       <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 md:px-8 md:py-8">
@@ -51,7 +58,9 @@ export default async function CompanyLayout({
           <Link href="/" className="text-gray-500 hover:text-gray-900">
             ← 다른 회사 분석
           </Link>
-          <span className="text-gray-400">corp_code: {corp_code}</span>
+          <span className="text-gray-400">
+            {raw.meta.company_name} · corp_code {corp_code}
+          </span>
         </nav>
         <MetaBar
           reportDate={raw.meta.report_date}
@@ -62,6 +71,17 @@ export default async function CompanyLayout({
           unit={raw.meta.currency_unit}
           source={raw.meta.source}
         />
+        <nav className="flex flex-wrap gap-1 border-b border-gray-100 pb-2">
+          {navItems.map((n) => (
+            <Link
+              key={n.href}
+              href={n.href}
+              className="rounded-md px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              {n.label}
+            </Link>
+          ))}
+        </nav>
         {children}
       </div>
     </main>

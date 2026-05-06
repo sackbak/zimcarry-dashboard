@@ -18,6 +18,7 @@ import {
 import { HeadVerdict } from "@/components/HeadVerdict";
 import { TrendChart } from "@/components/TrendChart";
 import { RichText } from "@/components/RichText";
+import { GenerateNarrativeButton } from "@/components/GenerateNarrativeButton";
 import { SIGNAL_BAR, SIGNAL_BG, SIGNAL_DOT } from "@/lib/signal";
 import { fmtPct } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -177,23 +178,16 @@ function LiteHeader({
           </span>
           <p className="text-sm leading-relaxed text-gray-800">
             결정적 지표(차트·KPI·비율·신호등)만 표시되고 있습니다. AI
-            서술형 분석(종합 진단·시나리오·5대 카테고리 코멘트)이 필요하면
-            아래 버튼을 누르세요.
+            서술형 정밀 분석(종합 진단·시나리오·5대 카테고리 코멘트·페이지별
+            insight)이 필요하면 오른쪽 버튼을 누르세요.
           </p>
           <p className="text-[11px] text-gray-500">
-            ⚠ 1회 호출당 약 70원 (Gemini 2.5 Flash) · {years.length}개년 (
-            {years[0]}~{years.at(-1)}) · {reportDate} 기준 ·{" "}
-            <span className="font-mono">{corpCode}</span>
+            ⚠ 1회 호출당 약 70원 (Gemini 2.5 Flash) · 7번 sequential 호출 ·
+            약 2~3분 소요 · {years.length}개년 ({years[0]}~{years.at(-1)}) ·{" "}
+            {reportDate} 기준 · <span className="font-mono">{corpCode}</span>
           </p>
         </div>
-        <button
-          type="button"
-          disabled
-          title="아직 미구현 — 다음 커밋에서 활성화"
-          className="cursor-not-allowed rounded-lg border border-amber-300 bg-amber-100/60 px-4 py-2 text-sm font-semibold text-amber-900 opacity-60"
-        >
-          AI 분석 생성 (예정)
-        </button>
+        <GenerateNarrativeButton id={corpCode} />
       </div>
     </div>
   );
