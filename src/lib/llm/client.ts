@@ -142,9 +142,41 @@ export async function generateSection<T = unknown>(
 }
 
 /**
- * LLM 응답에서 JSON 추출 + parse.
- * Gemini는 responseMimeType: "application/json"이면 깨끗한 JSON 보내지만
- * 만약을 위해 fence/prose 제거 방어 로직 유지.
+ * narrative 텍스트에서 잘못된 마크업 정리.
+ *  - "==red==text==red==" → "==text=="
+ *  - "==red==text" (closing 없음) → "==text=="  (가능한 경우)
+ *  - "**bold**" → "bold"
+ *  - "*italic*" → "italic"
+ */
+function sanitizeMarkup<T>(value: T): T {
+  if (typeof value === "string") {
+    let s = value;
+    // ==red==text==red== 류 HTML 태그 흉내 제거
+    s = s.replace(/==red==/gi, "==");
+    s = s.replace(/==danger==/gi, "==");
+    s = s.replace(/==warning==/gi, "==");
+    // == 가 4번 연속이면 빈 강조 → 제거
+    s = s.replace(/====/g, "");
+    // ** *  마크다운 마커 제거 (텍스트는 유지)
+    s = s.replace(/\*\*([^*]+)\*\*/g, "$1");
+    s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "$1");
+    return s as unknown as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map(sanitizeMarkup) as unknown as T;
+  }
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = sanitizeMarkup(v);
+    }
+    return out as T;
+  }
+  return value;
+}
+
+/**
+ * LLM 응답에서 JSON 추출 + parse + 마크업 정리.
  */
 function parseJsonResponse<T>(text: string, section: string): T {
   let cleaned = text.trim();
@@ -158,7 +190,8 @@ function parseJsonResponse<T>(text: string, section: string): T {
     }
   }
   try {
-    return JSON.parse(cleaned) as T;
+    const parsed = JSON.parse(cleaned) as T;
+    return sanitizeMarkup(parsed);
   } catch (e) {
     throw new Error(
       `[${section}] JSON parse 실패: ${(e as Error).message}\n--- raw ---\n${text.slice(0, 500)}`
