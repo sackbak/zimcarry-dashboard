@@ -21,7 +21,7 @@ import type {
 } from "@/types/CompanyAnalysis";
 
 const GEMINI_PRIMARY = "gemini-2.5-flash";
-const GEMINI_FALLBACK = "gemini-1.5-flash";
+const GEMINI_FALLBACK = "gemini-2.5-flash-lite";
 const GPT_MODEL = "gpt-4o-mini";
 
 let _gemini: GoogleGenerativeAI | null = null;
