@@ -1,19 +1,9 @@
 /**
  * Google Gemini API client wrapper for narrative generation.
  *
- * 서버 사이드 전용 — API key는 환경변수 GEMINI_API_KEY에서 읽음.
- *
- * 모델: Gemini 2.5 Flash (gemini-2.5-flash)
- *   - free tier: 1,500 RPD, 15 RPM, 1M TPM
- *   - paid: $0.30/M input, $2.50/M output
- *   - 회사당 ~$0.04 (free tier 안 들어가면 ~56원)
- *
- * JSON 출력: responseMimeType: "application/json"으로 강제.
- * 시스템 프롬프트: systemInstruction 필드 (모델 인스턴스 생성 시).
- *
- * 캐싱: Gemini는 context caching API 별도 제공하지만 32K+ 최소 prefix 필요.
- *   현재 7-call 워크플로우는 prefix가 ~7K라서 캐싱 X — free tier에선 의미 없음.
- *   유료 전환 + 큰 데이터일 때 별도 검토.
+ * 모델 전략: gemini-2.5-flash 우선, 503 연속 시 gemini-2.0-flash 자동 폴백.
+ *   2.5-flash: 최신, 품질 좋음, 서버 불안정 잦음
+ *   2.0-flash: 구버전, 안정적, 품질 근접
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -28,7 +18,8 @@ import type {
   ComputedMetrics,
 } from "@/types/CompanyAnalysis";
 
-const MODEL = "gemini-2.5-flash";
+const PRIMARY_MODEL = "gemini-2.5-flash";
+const FALLBACK_MODEL = "gemini-2.0-flash";
 
 let _client: GoogleGenerativeAI | null = null;
 function getClient(): GoogleGenerativeAI {
@@ -79,41 +70,59 @@ export async function generateSection<T = unknown>(
   const dataContext = buildDataContext(raw, computed, section);
   const instruction = SECTION_PROMPTS[section];
 
-  const model = client.getGenerativeModel({
-    model: MODEL,
-    systemInstruction: SYSTEM_PROMPT,
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: opts.temperature ?? 0.3,
-    },
-  });
+  const makeModel = (modelName: string) =>
+    client.getGenerativeModel({
+      model: modelName,
+      systemInstruction: SYSTEM_PROMPT,
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: opts.temperature ?? 0.3,
+      },
+    });
 
-  // 503 Service Unavailable / 429 Rate Limit 자동 재시도 (exponential backoff).
-  const maxRetries = 4;
+  // 전략: primary(2.5) 2회 시도 → 503/500/502 계속이면 fallback(2.0)으로 전환.
+  // 429(rate limit)는 잠깐 기다렸다 재시도.
   let result;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      result = await model.generateContent([
-        { text: dataContext },
-        { text: instruction },
-      ]);
-      break;
-    } catch (e: unknown) {
-      const err = e as { status?: number; message?: string };
-      const status = err.status;
-      const isRetryable =
-        status === 503 || status === 429 || status === 500 || status === 502;
-      if (!isRetryable || attempt === maxRetries) throw e;
-      const waitMs = Math.min(2 ** attempt * 1000, 16000);
-      if (opts.verbose) {
-        console.log(
-          `  [${section}] ${status} retry ${attempt + 1}/${maxRetries} in ${waitMs}ms...`
-        );
+  let lastError: unknown;
+  for (const modelName of [PRIMARY_MODEL, FALLBACK_MODEL]) {
+    const model = makeModel(modelName);
+    const maxAttempts = 2;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        result = await model.generateContent([
+          { text: dataContext },
+          { text: instruction },
+        ]);
+        if (opts.verbose && modelName !== PRIMARY_MODEL) {
+          console.log(`  [${section}] fallback → ${modelName} succeeded`);
+        }
+        break;
+      } catch (e: unknown) {
+        lastError = e;
+        const err = e as { status?: number; message?: string };
+        const status = err.status;
+        if (status === 429) {
+          // rate limit — 잠깐 기다렸다 재시도
+          await new Promise((r) => setTimeout(r, 3000));
+          continue;
+        }
+        if (status === 503 || status === 500 || status === 502) {
+          if (opts.verbose) {
+            console.log(`  [${section}] ${modelName} ${status}, attempt ${attempt + 1}/${maxAttempts}`);
+          }
+          // 첫 번째 시도면 1초 대기 후 재시도, 두 번째면 다음 모델로
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 1000));
+            continue;
+          }
+          break; // 다음 모델(fallback)로 넘어감
+        }
+        throw e; // 그 외 에러는 즉시 throw
       }
-      await new Promise((r) => setTimeout(r, waitMs));
     }
+    if (result) break;
   }
-  if (!result) throw new Error(`[${section}] result undefined after retries`);
+  if (!result) throw lastError ?? new Error(`[${section}] all models failed`);
 
   const response = result.response;
   const rawText = response.text();
