@@ -133,7 +133,7 @@ export async function generateAnalysis(formData: FormData): Promise<void> {
       JSON.stringify(narrative, null, 2),
       "utf8"
     );
-    revalidatePath(`/company/${id}`);
+    revalidatePath(`/company/${id}`, "layout");
   } catch (e) {
     if (e instanceof Error && e.message.startsWith("NEXT_REDIRECT")) throw e;
     const msg = e instanceof Error ? e.message : String(e);
