@@ -77,72 +77,135 @@ export default async function CompanyDashboard({
   const fcfSeries = computed.derived_cf?.fcf ?? [];
 
   return (
-    <div className="space-y-8">
+    <div>
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
           <span className="font-semibold">AI 분석 실패:</span>{" "}
           {decodeURIComponent(error)}
         </div>
       )}
-      <header>
-        <div className="text-xs font-medium uppercase tracking-wider text-gray-400">
-          Overview · {raw.meta.data_period} ({years.length}개년)
-        </div>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
-          {raw.meta.company_name} 재무 대시보드
-        </h1>
-        {raw.company.industry && (
-          <div className="mt-1 text-sm text-gray-500">
-            {raw.company.industry}
-            {raw.company.is_listed && " · 상장사"}
-          </div>
-        )}
-      </header>
 
       {narrative ? (
-        /* ── AI 분석 활성 — 다크 Grok 스타일 섹션 ── */
-        <div className="ai-reveal space-y-4 rounded-2xl bg-gray-950 p-4 md:p-6">
-          {/* 상단 배지 */}
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              AI 정밀 분석
-            </span>
-            <span className="text-[11px] text-white/30">
-              {raw.meta.report_date} 기준 · {lastYear} 결산
-            </span>
+        <>
+          {/* ── AI 분석 활성 — 전체 너비 다크 히어로 섹션 ── */}
+          <div className="-mx-4 md:-mx-8 bg-gray-950">
+            <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-8 md:px-8 md:py-10">
+
+              {/* 헤더 (다크 배경 위) */}
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-[11px] font-medium uppercase tracking-wider text-gray-500">
+                    Overview · {raw.meta.data_period} ({years.length}개년)
+                  </div>
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">
+                    {raw.meta.company_name} 재무 대시보드
+                  </h1>
+                  {raw.company.industry && (
+                    <div className="mt-1 text-sm text-gray-400">
+                      {raw.company.industry}
+                      {raw.company.is_listed && " · 상장사"}
+                    </div>
+                  )}
+                </div>
+                <div className="shrink-0 pt-1">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/60">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    AI 정밀 분석
+                  </span>
+                  <div className="mt-1 text-right text-[11px] text-gray-600">
+                    {raw.meta.report_date} 기준
+                  </div>
+                </div>
+              </div>
+
+              {/* 종합 진단 */}
+              <div className="ai-reveal">
+                <HeadVerdict
+                  topic="종합"
+                  status={narrative.top_verdict.label.replace(/^[^\s]+\s/, "")}
+                  signal={narrative.top_verdict.signal}
+                  headline={narrative.pages.dashboard.headline}
+                  message={narrative.pages.dashboard.message}
+                  asOfNote={`${years.length}개년 (${raw.meta.data_period ?? years[0] + "~" + lastYear})`}
+                  insight={narrative.pages.dashboard.insight}
+                  dark
+                />
+              </div>
+
+              {/* 5대 카테고리 */}
+              <div className="ai-reveal ai-reveal-delay-1 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
+                {narrative.categories.map((c) => (
+                  <CategoryDetailCard
+                    key={c.name}
+                    category={{ name: c.name, signal: c.signal, summary: c.summary, comment: c.comment }}
+                    computed={computed}
+                    isLite={false}
+                    dark
+                  />
+                ))}
+              </div>
+
+              {/* 시나리오 + 액션 */}
+              <div className="ai-reveal ai-reveal-delay-2">
+                <ScenariosCard verdict={narrative.top_verdict} />
+              </div>
+
+            </div>
           </div>
 
-          <div className="ai-reveal ai-reveal-delay-1">
-            <HeadVerdict
-              topic="종합"
-              status={narrative.top_verdict.label.replace(/^[^\s]+\s/, "")}
-              signal={narrative.top_verdict.signal}
-              headline={narrative.pages.dashboard.headline}
-              message={narrative.pages.dashboard.message}
-              asOfNote={`${years.length}개년 (${raw.meta.data_period ?? years[0] + "~" + lastYear})`}
-              insight={narrative.pages.dashboard.insight}
-              dark
+          {/* ── 흰 배경 — 결정적 데이터 ── */}
+          <div className="mt-8 space-y-8">
+            <section className="space-y-3">
+              <h2 className="text-base font-semibold text-gray-900">
+                핵심 KPI · {lastYear}년
+                <span className="ml-2 text-xs font-normal text-gray-400">
+                  카드 클릭 → 5년 추이 + 정의
+                </span>
+              </h2>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+                {computed.top_kpis.map((kpi) => {
+                  const meta = kpiSeriesMeta(kpi.label, computed);
+                  return (
+                    <DashboardKpiCard
+                      key={kpi.label}
+                      kpi={kpi}
+                      years={years}
+                      series={meta?.values}
+                      seriesKind={meta?.kind}
+                      color={meta?.color}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+            <TrendChart
+              years={years}
+              series={[
+                { key: "revenue", label: "매출", color: "#0f172a", values: raw.financials.income_statement.revenue ?? [] },
+                { key: "op", label: "영업이익", color: "#94a3b8", values: raw.financials.income_statement.operating_income ?? [] },
+                { key: "fcf", label: "FCF", color: "#dc2626", values: fcfSeries },
+              ]}
             />
           </div>
-
-          {/* 5대 카테고리 */}
-          <div className="ai-reveal ai-reveal-delay-2 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
-            {narrative.categories.map((c) => (
-              <CategoryDetailCard
-                key={c.name}
-                category={{ name: c.name, signal: c.signal, summary: c.summary, comment: c.comment }}
-                computed={computed}
-                isLite={false}
-                dark
-              />
-            ))}
-          </div>
-        </div>
+        </>
       ) : (
-        <>
+        /* ── Lite 모드 ── */
+        <div className="space-y-8">
+          <header>
+            <div className="text-xs font-medium uppercase tracking-wider text-gray-400">
+              Overview · {raw.meta.data_period} ({years.length}개년)
+            </div>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
+              {raw.meta.company_name} 재무 대시보드
+            </h1>
+            {raw.company.industry && (
+              <div className="mt-1 text-sm text-gray-500">
+                {raw.company.industry}
+                {raw.company.is_listed && " · 상장사"}
+              </div>
+            )}
+          </header>
           <LiteHeader corpCode={corp_code} years={years} reportDate={raw.meta.report_date} />
-          {/* Lite 카테고리 */}
           <section className="space-y-3">
             <div className="flex items-baseline justify-between">
               <h2 className="text-base font-semibold text-gray-900">
@@ -164,67 +227,39 @@ export default async function CompanyDashboard({
               ))}
             </div>
           </section>
-        </>
-      )}
-
-      {/* Top KPIs — 결정적, 항상 표시. 카드 클릭 → 정의 + 5년 추이 + 임계치 모달 */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-900">
-          핵심 KPI · {lastYear}년
-          <span className="ml-2 text-xs font-normal text-gray-400">
-            카드 클릭 → 5년 추이 + 정의
-          </span>
-        </h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          {computed.top_kpis.map((kpi) => {
-            const meta = kpiSeriesMeta(kpi.label, computed);
-            return (
-              <DashboardKpiCard
-                key={kpi.label}
-                kpi={kpi}
-                years={years}
-                series={meta?.values}
-                seriesKind={meta?.kind}
-                color={meta?.color}
-              />
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Scenarios (LLM) + Trend (결정적) */}
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        {narrative && (
-          <div className="ai-reveal ai-reveal-delay-3 xl:col-span-2">
-            <ScenariosCard verdict={narrative.top_verdict} />
-          </div>
-        )}
-        <div className={narrative ? "xl:col-span-1" : "xl:col-span-3"}>
+          <section className="space-y-3">
+            <h2 className="text-base font-semibold text-gray-900">
+              핵심 KPI · {lastYear}년
+              <span className="ml-2 text-xs font-normal text-gray-400">
+                카드 클릭 → 5년 추이 + 정의
+              </span>
+            </h2>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+              {computed.top_kpis.map((kpi) => {
+                const meta = kpiSeriesMeta(kpi.label, computed);
+                return (
+                  <DashboardKpiCard
+                    key={kpi.label}
+                    kpi={kpi}
+                    years={years}
+                    series={meta?.values}
+                    seriesKind={meta?.kind}
+                    color={meta?.color}
+                  />
+                );
+              })}
+            </div>
+          </section>
           <TrendChart
             years={years}
             series={[
-              {
-                key: "revenue",
-                label: "매출",
-                color: "#0f172a",
-                values: raw.financials.income_statement.revenue ?? [],
-              },
-              {
-                key: "op",
-                label: "영업이익",
-                color: "#94a3b8",
-                values: raw.financials.income_statement.operating_income ?? [],
-              },
-              {
-                key: "fcf",
-                label: "FCF",
-                color: "#dc2626",
-                values: fcfSeries,
-              },
+              { key: "revenue", label: "매출", color: "#0f172a", values: raw.financials.income_statement.revenue ?? [] },
+              { key: "op", label: "영업이익", color: "#94a3b8", values: raw.financials.income_statement.operating_income ?? [] },
+              { key: "fcf", label: "FCF", color: "#dc2626", values: fcfSeries },
             ]}
           />
         </div>
-      </section>
+      )}
     </div>
   );
 }
