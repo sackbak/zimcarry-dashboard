@@ -98,7 +98,10 @@ export async function generateSection<T = unknown>(
   let lastError: unknown;
   let succeeded = false;
 
-  for (const modelName of [GEMINI_PRIMARY, GEMINI_FALLBACK]) {
+  const geminiModels = [GEMINI_PRIMARY, GEMINI_FALLBACK];
+  for (let mi = 0; mi < geminiModels.length; mi++) {
+    const modelName = geminiModels[mi];
+    const isLast = mi === geminiModels.length - 1;
     const model = makeGeminiModel(modelName);
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
@@ -106,7 +109,7 @@ export async function generateSection<T = unknown>(
           { text: dataContext },
           { text: instruction },
         ]);
-        if (opts.verbose && modelName !== GEMINI_PRIMARY) {
+        if (opts.verbose && mi > 0) {
           console.log(`  [${section}] fallback → ${modelName} succeeded`);
         }
         rawText = result.response.text();
@@ -117,13 +120,17 @@ export async function generateSection<T = unknown>(
       } catch (e: unknown) {
         lastError = e;
         const status = (e as { status?: number }).status;
+        if (opts.verbose) console.log(`  [${section}] ${modelName} ${status ?? "err"} attempt ${attempt + 1}`);
+        // 429: 잠깐 기다렸다 같은 모델 재시도
         if (status === 429) { await new Promise((r) => setTimeout(r, 3000)); continue; }
+        // 503/500/502: 1회 재시도 후 다음 모델로
         if (status === 503 || status === 500 || status === 502) {
-          if (opts.verbose) console.log(`  [${section}] ${modelName} ${status} attempt ${attempt + 1}`);
           if (attempt === 0) { await new Promise((r) => setTimeout(r, 1000)); continue; }
           break;
         }
-        throw e;
+        // 그 외(404 포함): 마지막 모델이면 throw, 아니면 다음 모델 시도
+        if (isLast) throw e;
+        break;
       }
     }
     if (succeeded) break;
