@@ -40,23 +40,36 @@ function getDefaultYears(): number[] {
 }
 
 const DATA_DIR = path.join(process.cwd(), "src", "data");
+// Vercel Lambda: /var/task (bundle) is read-only. Use /tmp for runtime writes.
+const WRITE_DIR = process.env.VERCEL ? "/tmp/zimcarry-data" : DATA_DIR;
+
+// Returns the path where the file lives, checking WRITE_DIR first then DATA_DIR.
+function findFile(filename: string): string | null {
+  if (WRITE_DIR !== DATA_DIR) {
+    const p = path.join(WRITE_DIR, filename);
+    if (existsSync(p)) return p;
+  }
+  const p = path.join(DATA_DIR, filename);
+  if (existsSync(p)) return p;
+  return null;
+}
 
 export async function loadAnalysis(id: string): Promise<CompanyAnalysis> {
-  const single = path.join(DATA_DIR, `${id}_analysis.json`);
-  if (existsSync(single)) {
-    const text = await readFile(single, "utf8");
+  const singlePath = findFile(`${id}_analysis.json`);
+  if (singlePath) {
+    const text = await readFile(singlePath, "utf8");
     return JSON.parse(text) as CompanyAnalysis;
   }
-  const rawPath = path.join(DATA_DIR, `${id}_raw.json`);
-  const compPath = path.join(DATA_DIR, `${id}_computed.json`);
-  const narrPath = path.join(DATA_DIR, `${id}_narrative.json`);
-  if (existsSync(rawPath) && existsSync(compPath)) {
+  const rawPath = findFile(`${id}_raw.json`);
+  const compPath = findFile(`${id}_computed.json`);
+  if (rawPath && compPath) {
     const [raw, computed] = await Promise.all([
       readFile(rawPath, "utf8").then((t) => JSON.parse(t) as RawCompanyData),
       readFile(compPath, "utf8").then((t) => JSON.parse(t) as ComputedMetrics),
     ]);
     let narrative: CompanyNarrative | undefined;
-    if (existsSync(narrPath)) {
+    const narrPath = findFile(`${id}_narrative.json`);
+    if (narrPath) {
       narrative = JSON.parse(
         await readFile(narrPath, "utf8")
       ) as CompanyNarrative;
@@ -113,15 +126,15 @@ export async function persistAnalysis(
   raw: CompanyAnalysis["raw"],
   computed: CompanyAnalysis["computed"]
 ): Promise<void> {
-  await mkdir(DATA_DIR, { recursive: true });
+  await mkdir(WRITE_DIR, { recursive: true });
   await Promise.all([
     writeFile(
-      path.join(DATA_DIR, `${id}_raw.json`),
+      path.join(WRITE_DIR, `${id}_raw.json`),
       JSON.stringify(raw, null, 2),
       "utf8"
     ),
     writeFile(
-      path.join(DATA_DIR, `${id}_computed.json`),
+      path.join(WRITE_DIR, `${id}_computed.json`),
       JSON.stringify(computed, null, 2),
       "utf8"
     ),
@@ -134,23 +147,26 @@ export async function persistAnalysis(
  */
 export async function recordView(id: string): Promise<void> {
   const now = new Date();
-  const candidates = [
+  const suffixes = [
     `${id}_raw.json`,
     `${id}_computed.json`,
     `${id}_analysis.json`,
     `${id}_narrative.json`,
   ];
+  const dirs = WRITE_DIR !== DATA_DIR ? [WRITE_DIR, DATA_DIR] : [DATA_DIR];
   await Promise.all(
-    candidates.map(async (f) => {
-      const p = path.join(DATA_DIR, f);
-      if (existsSync(p)) {
-        try {
-          await utimes(p, now, now);
-        } catch {
-          // ignore — read-only filesystem 등
+    dirs.flatMap((dir) =>
+      suffixes.map(async (f) => {
+        const p = path.join(dir, f);
+        if (existsSync(p)) {
+          try {
+            await utimes(p, now, now);
+          } catch {
+            // ignore — read-only filesystem 등
+          }
         }
-      }
-    })
+      })
+    )
   );
 }
 
@@ -160,29 +176,37 @@ export async function recordView(id: string): Promise<void> {
  */
 export async function listAvailableCompanies(): Promise<string[]> {
   const { readdir } = await import("node:fs/promises");
-  const files = await readdir(DATA_DIR);
   const ids = new Set<string>();
-  for (const f of files) {
-    const m = f.match(/^(.+?)_(analysis|narrative|raw|computed)\.json$/);
-    if (m) ids.add(m[1]);
+
+  const dirs = WRITE_DIR !== DATA_DIR ? [WRITE_DIR, DATA_DIR] : [DATA_DIR];
+  for (const dir of dirs) {
+    if (!existsSync(dir)) continue;
+    const files = await readdir(dir);
+    for (const f of files) {
+      const m = f.match(/^(.+?)_(analysis|narrative|raw|computed)\.json$/);
+      if (m) ids.add(m[1]);
+    }
   }
+
   // 각 ID의 가장 최신 mtime 구해서 DESC 정렬 (최근 본 회사가 위)
   const withMtime = await Promise.all(
     Array.from(ids).map(async (id) => {
       let latest = 0;
-      for (const suffix of [
-        "_raw.json",
-        "_computed.json",
-        "_analysis.json",
-        "_narrative.json",
-      ]) {
-        const p = path.join(DATA_DIR, `${id}${suffix}`);
-        if (!existsSync(p)) continue;
-        try {
-          const s = await stat(p);
-          if (s.mtimeMs > latest) latest = s.mtimeMs;
-        } catch {
-          // ignore
+      for (const dir of dirs) {
+        for (const suffix of [
+          "_raw.json",
+          "_computed.json",
+          "_analysis.json",
+          "_narrative.json",
+        ]) {
+          const p = path.join(dir, `${id}${suffix}`);
+          if (!existsSync(p)) continue;
+          try {
+            const s = await stat(p);
+            if (s.mtimeMs > latest) latest = s.mtimeMs;
+          } catch {
+            // ignore
+          }
         }
       }
       return { id, latest };

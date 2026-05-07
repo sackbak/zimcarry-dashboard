@@ -55,10 +55,12 @@ export async function generateStaticParams() {
 
 export default async function CompanyDashboard({
   params,
+  searchParams,
 }: {
   params: Promise<{ corp_code: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
-  const { corp_code } = await params;
+  const [{ corp_code }, { error }] = await Promise.all([params, searchParams]);
   let analysis;
   try {
     analysis = await loadAnalysis(corp_code);
@@ -76,6 +78,12 @@ export default async function CompanyDashboard({
 
   return (
     <div className="space-y-8">
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <span className="font-semibold">AI 분석 실패:</span>{" "}
+          {decodeURIComponent(error)}
+        </div>
+      )}
       <header>
         <div className="text-xs font-medium uppercase tracking-wider text-gray-400">
           Overview · {raw.meta.data_period} ({years.length}개년)

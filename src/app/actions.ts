@@ -24,6 +24,8 @@ import { extractFromFile, slugify } from "@/lib/extract/extract";
 import { computeMetrics } from "@/lib/computed";
 
 const DATA_DIR = path.join(process.cwd(), "src", "data");
+// Vercel Lambda: bundle dir is read-only; use /tmp for runtime writes
+const WRITE_DIR = process.env.VERCEL ? "/tmp/zimcarry-data" : DATA_DIR;
 
 /**
  * 비상장사 PDF/Excel 업로드 → LLM 추출 → raw + computed 저장 → /company/<slug> 리다이렉트.
@@ -78,15 +80,15 @@ export async function uploadCompanyFile(formData: FormData): Promise<void> {
   const computed = computeMetrics(raw);
   const id = slugify(raw.meta.company_name);
 
-  await mkdir(DATA_DIR, { recursive: true });
+  await mkdir(WRITE_DIR, { recursive: true });
   await Promise.all([
     writeFile(
-      path.join(DATA_DIR, `${id}_raw.json`),
+      path.join(WRITE_DIR, `${id}_raw.json`),
       JSON.stringify(raw, null, 2),
       "utf8"
     ),
     writeFile(
-      path.join(DATA_DIR, `${id}_computed.json`),
+      path.join(WRITE_DIR, `${id}_computed.json`),
       JSON.stringify(computed, null, 2),
       "utf8"
     ),
@@ -125,9 +127,9 @@ export async function generateAnalysis(formData: FormData): Promise<void> {
       analysis.computed,
       { verbose: false }
     );
-    await mkdir(DATA_DIR, { recursive: true });
+    await mkdir(WRITE_DIR, { recursive: true });
     await writeFile(
-      path.join(DATA_DIR, `${id}_narrative.json`),
+      path.join(WRITE_DIR, `${id}_narrative.json`),
       JSON.stringify(narrative, null, 2),
       "utf8"
     );
