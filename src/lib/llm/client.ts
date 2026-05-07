@@ -1,12 +1,14 @@
 /**
- * Google Gemini API client wrapper for narrative generation.
+ * LLM client — narrative generation.
  *
- * 모델 전략: gemini-2.5-flash 우선, 503 연속 시 gemini-2.0-flash 자동 폴백.
- *   2.5-flash: 최신, 품질 좋음, 서버 불안정 잦음
- *   2.0-flash: 구버전, 안정적, 품질 근접
+ * 폴백 체인 (앞에서 실패하면 다음으로):
+ *   1. gemini-2.5-flash  (GEMINI_API_KEY 필수)
+ *   2. gemini-2.0-flash  (같은 키, 더 안정적)
+ *   3. gpt-4o-mini       (OPENAI_API_KEY 있을 때만 활성화)
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import {
   SYSTEM_PROMPT,
   buildDataContext,
@@ -18,12 +20,13 @@ import type {
   ComputedMetrics,
 } from "@/types/CompanyAnalysis";
 
-const PRIMARY_MODEL = "gemini-2.5-flash";
-const FALLBACK_MODEL = "gemini-2.0-flash";
+const GEMINI_PRIMARY = "gemini-2.5-flash";
+const GEMINI_FALLBACK = "gemini-2.0-flash";
+const GPT_MODEL = "gpt-4o-mini";
 
-let _client: GoogleGenerativeAI | null = null;
-function getClient(): GoogleGenerativeAI {
-  if (_client) return _client;
+let _gemini: GoogleGenerativeAI | null = null;
+function getGeminiClient(): GoogleGenerativeAI {
+  if (_gemini) return _gemini;
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error(
@@ -31,8 +34,16 @@ function getClient(): GoogleGenerativeAI {
         "발급: https://aistudio.google.com/app/apikey"
     );
   }
-  _client = new GoogleGenerativeAI(apiKey);
-  return _client;
+  _gemini = new GoogleGenerativeAI(apiKey);
+  return _gemini;
+}
+
+let _openai: OpenAI | null = null;
+function getOpenAIClient(): OpenAI | null {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null; // 키 없으면 폴백 비활성화
+  if (!_openai) _openai = new OpenAI({ apiKey });
+  return _openai;
 }
 
 export type GenerateOptions = {
@@ -66,12 +77,13 @@ export async function generateSection<T = unknown>(
   computed: ComputedMetrics,
   opts: GenerateOptions = {}
 ): Promise<GenerateResult<T>> {
-  const client = getClient();
   const dataContext = buildDataContext(raw, computed, section);
   const instruction = SECTION_PROMPTS[section];
 
-  const makeModel = (modelName: string) =>
-    client.getGenerativeModel({
+  // ── Gemini 시도 (2.5-flash → 2.0-flash) ──────────────────────────
+  const gemini = getGeminiClient();
+  const makeGeminiModel = (modelName: string) =>
+    gemini.getGenerativeModel({
       model: modelName,
       systemInstruction: SYSTEM_PROMPT,
       generationConfig: {
@@ -80,60 +92,68 @@ export async function generateSection<T = unknown>(
       },
     });
 
-  // 전략: primary(2.5) 2회 시도 → 503/500/502 계속이면 fallback(2.0)으로 전환.
-  // 429(rate limit)는 잠깐 기다렸다 재시도.
-  let result;
+  let rawText = "";
+  let inputTokens = 0;
+  let outputTokens = 0;
   let lastError: unknown;
-  for (const modelName of [PRIMARY_MODEL, FALLBACK_MODEL]) {
-    const model = makeModel(modelName);
-    const maxAttempts = 2;
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+  let succeeded = false;
+
+  for (const modelName of [GEMINI_PRIMARY, GEMINI_FALLBACK]) {
+    const model = makeGeminiModel(modelName);
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        result = await model.generateContent([
+        const result = await model.generateContent([
           { text: dataContext },
           { text: instruction },
         ]);
-        if (opts.verbose && modelName !== PRIMARY_MODEL) {
+        if (opts.verbose && modelName !== GEMINI_PRIMARY) {
           console.log(`  [${section}] fallback → ${modelName} succeeded`);
         }
+        rawText = result.response.text();
+        inputTokens = result.response.usageMetadata?.promptTokenCount ?? 0;
+        outputTokens = result.response.usageMetadata?.candidatesTokenCount ?? 0;
+        succeeded = true;
         break;
       } catch (e: unknown) {
         lastError = e;
-        const err = e as { status?: number; message?: string };
-        const status = err.status;
-        if (status === 429) {
-          // rate limit — 잠깐 기다렸다 재시도
-          await new Promise((r) => setTimeout(r, 3000));
-          continue;
-        }
+        const status = (e as { status?: number }).status;
+        if (status === 429) { await new Promise((r) => setTimeout(r, 3000)); continue; }
         if (status === 503 || status === 500 || status === 502) {
-          if (opts.verbose) {
-            console.log(`  [${section}] ${modelName} ${status}, attempt ${attempt + 1}/${maxAttempts}`);
-          }
-          // 첫 번째 시도면 1초 대기 후 재시도, 두 번째면 다음 모델로
-          if (attempt === 0) {
-            await new Promise((r) => setTimeout(r, 1000));
-            continue;
-          }
-          break; // 다음 모델(fallback)로 넘어감
+          if (opts.verbose) console.log(`  [${section}] ${modelName} ${status} attempt ${attempt + 1}`);
+          if (attempt === 0) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+          break;
         }
-        throw e; // 그 외 에러는 즉시 throw
+        throw e;
       }
     }
-    if (result) break;
+    if (succeeded) break;
   }
-  if (!result) throw lastError ?? new Error(`[${section}] all models failed`);
 
-  const response = result.response;
-  const rawText = response.text();
-  const usage = response.usageMetadata;
+  // ── GPT-4o-mini 폴백 (OPENAI_API_KEY 있을 때만) ────────────────────
+  if (!succeeded) {
+    const openai = getOpenAIClient();
+    if (openai) {
+      if (opts.verbose) console.log(`  [${section}] Gemini 전부 실패 → gpt-4o-mini 시도`);
+      const completion = await openai.chat.completions.create({
+        model: GPT_MODEL,
+        temperature: opts.temperature ?? 0.3,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: `${dataContext}\n\n${instruction}` },
+        ],
+      });
+      rawText = completion.choices[0].message.content ?? "{}";
+      inputTokens = completion.usage?.prompt_tokens ?? 0;
+      outputTokens = completion.usage?.completion_tokens ?? 0;
+      succeeded = true;
+    }
+  }
+
+  if (!succeeded) throw lastError ?? new Error(`[${section}] 모든 모델 실패`);
 
   if (opts.verbose) {
-    console.log(`[${section}] usage:`, {
-      prompt: usage?.promptTokenCount,
-      output: usage?.candidatesTokenCount,
-      total: usage?.totalTokenCount,
-    });
+    console.log(`[${section}] usage: input=${inputTokens} output=${outputTokens}`);
     console.log(`[${section}] raw text preview:`, rawText.slice(0, 200));
   }
 
@@ -142,8 +162,8 @@ export async function generateSection<T = unknown>(
   return {
     data,
     usage: {
-      input_tokens: usage?.promptTokenCount ?? 0,
-      output_tokens: usage?.candidatesTokenCount ?? 0,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
       cache_read_input_tokens: 0,
     },
     raw_text: rawText,
