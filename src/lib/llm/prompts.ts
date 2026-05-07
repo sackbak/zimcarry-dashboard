@@ -109,6 +109,13 @@ type ContextScope = {
 };
 
 const SCOPES: Record<string, ContextScope> = {
+  all_in_one: {
+    fin: ["income_statement", "balance_sheet", "cash_flow_raw"],
+    ratios: true,
+    derived_cf: true,
+    top_kpis: true,
+    per_item: "income",
+  },
   top_verdict_and_categories: {
     fin: ["income_statement", "balance_sheet", "cash_flow_raw"],
     ratios: true,
@@ -330,7 +337,96 @@ export const PROMPT_ITEM_NOTES_BALANCE = `formatted_financials.balance_sheet에 
 
 반드시 formatted_financials.balance_sheet의 모든 키 포함. note는 각 1문장으로 짧게.`;
 
+export const PROMPT_ALL_IN_ONE = `위 데이터를 분석해서 아래 JSON 하나로 모두 출력하세요. 필드 이름 변경 절대 금지.
+
+{
+  "top_verdict": {
+    "signal": "green" | "yellow" | "red",
+    "label": "🟢 양호" | "🟡 전환기" | "🔴 위험" 등 한 단어 라벨,
+    "summary": "<2~3문장 종합 진단. M&A 담당자가 30초 안에 핵심 리스크/기회 파악. 구체적 수치 필수>",
+    "key_question": "<딜 검토 시 반드시 답해야 할 핵심 질문 1개. '이 회사의 XX는 YY이고 ZZ가 미해결인데, AA는 가능한가?' 형식>",
+    "scenarios": {
+      "bullish": "<2~3문장. 낙관 시나리오 트리거 + 예상 재무 결과>",
+      "base": "<2~3문장. 현재 추세 지속 시 12~24개월 후 모습>",
+      "bearish": "<2~3문장. 핵심 리스크 현실화 트리거 + 최악 결과>"
+    },
+    "actions": [
+      "<M&A/투자 담당자가 7일 내 실행 가능한 구체적 스텝 3~5개. '어느 자료에서 무엇을 확인' 형태>"
+    ]
+  },
+  "categories": [
+    {
+      "name": "성장성",
+      "signal": "green" | "yellow" | "red",
+      "summary": "🟢 우수" 등 한 단어 라벨,
+      "comment": "<2~3문장. 성장 질(유기적 vs 외형), 둔화 변곡점, 향후 방향성 포함>",
+      "kpi_refs": []
+    },
+    { "name": "수익성", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] },
+    { "name": "안정성", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] },
+    { "name": "활동성", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] },
+    { "name": "현금흐름", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] }
+  ],
+  "pages": {
+    "dashboard": {
+      "headline": "<1줄 핵심 테마. 위험 부분만 ==강조== 감싸기. 80자 이내>",
+      "message": "<1~2문장 보조 설명. 구체적 수치 포함>",
+      "insight": {
+        "conclusion": "<1~2문장 결론. 수치 포함>",
+        "evidence": ["<3~5개. 각 항목 한 줄: 구체적 숫자 + 의미>"],
+        "reasoning": "<2~3문장 인과관계 서술>",
+        "accounting": ["<2~4개 K-IFRS watchpoint>"],
+        "mna": ["<2~4개 M&A 관점>"],
+        "monitoring": ["<2~4개 추적 지표>"]
+      }
+    },
+    "balance_sheet": {
+      "headline": "<자본구조·부채만기·자산질 중 핵심 테마. 80자 이내>",
+      "message": "<1~2문장>",
+      "insight": {
+        "conclusion": "<1~2문장>",
+        "evidence": ["<3~5개>"],
+        "reasoning": "<2~3문장>",
+        "accounting": ["<2~4개: 자본잠식 이력, 부채만기, 자산환금성>"],
+        "mna": ["<2~4개: 청산가치 vs 장부가, 협상 레버리지>"],
+        "monitoring": ["<2~4개>"]
+      }
+    },
+    "income_statement": {
+      "headline": "<매출성장·수익성·비용구조 중 핵심 테마. 80자 이내>",
+      "message": "<1~2문장>",
+      "insight": {
+        "conclusion": "<1~2문장>",
+        "evidence": ["<3~5개>"],
+        "reasoning": "<2~3문장>",
+        "accounting": ["<2~4개: 비용 자본화 의심, 운영레버리지>"],
+        "mna": ["<2~4개: EBITDA 배수, BEP 달성 시점>"],
+        "monitoring": ["<2~4개>"]
+      }
+    },
+    "cash_flow": {
+      "headline": "<OCF/FCF 자력생존·런웨이·CAPEX 성격 중 핵심 테마. 80자 이내>",
+      "message": "<1~2문장>",
+      "insight": {
+        "conclusion": "<1~2문장>",
+        "evidence": ["<3~5개>"],
+        "reasoning": "<2~3문장>",
+        "accounting": ["<2~4개: 운전자본 효과, CAPEX 무형자본화>"],
+        "mna": ["<2~4개: 외부자금 의존도, 누적 FCF>"],
+        "monitoring": ["<2~4개>"]
+      }
+    }
+  }
+}
+
+판단 기준:
+- top_verdict.signal: 5개 카테고리 신호 종합. 자본잠식 한번이라도 있으면 최소 yellow.
+- categories[].signal: 자본잠식·이자보상 음수 같은 critical 항목은 yellow/red 강제.
+- actions: "검토 필요" 같은 막연한 표현 금지. 구체적 스텝만.
+- 각 페이지 insight는 해당 재무제표 관점에 집중. 대시보드와 중복되는 내용 최소화.`;
+
 export const SECTION_PROMPTS = {
+  all_in_one: PROMPT_ALL_IN_ONE,
   top_verdict_and_categories: PROMPT_TOP_VERDICT_AND_CATEGORIES,
   dashboard_insight: PROMPT_DASHBOARD_INSIGHT,
   bs_insight: PROMPT_BS_INSIGHT,

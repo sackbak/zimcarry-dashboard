@@ -1,11 +1,8 @@
 /**
- * 회사 narrative 전체 생성 — 7개 section을 모두 동시 호출 (Promise.all).
+ * 회사 narrative 전체 생성 — 5개 병렬 호출 대신 단일 호출로 전체 생성.
  *
- * Gemini 2.5 Flash 사용 — free tier 안에선 비용 0, paid도 회사당 ~$0.04.
- * Free tier 15 RPM 이내라 7개 동시 호출 안전. 7 section 모두 독립적
- * (raw + computed만 입력, 서로 결과 참조 안 함).
- *
- * 시간: sequential 2~3분 → parallel 30~60초 (max latency에 수렴).
+ * 5개 Promise.all 방식: 최대 latency 호출이 60s 타임아웃 유발.
+ * 단일 호출 방식: 15~25s 목표 (Gemini 2.5 Flash 1회 출력 시간).
  */
 
 import { generateSection, type GenerateResult } from "@/lib/llm/client";
@@ -20,95 +17,66 @@ import type {
 
 export type GenerateNarrativeOptions = {
   verbose?: boolean;
-  /** 호출 사이 progress 콜백 (UI streaming용 추후 확장) */
   onProgress?: (section: string, idx: number, total: number) => void;
 };
 
 export type NarrativeUsage = {
   total_input_tokens: number;
   total_output_tokens: number;
-  /** 추정 비용 USD (Gemini 2.5 Flash: $0.30/M input, $2.50/M output. Free tier 안이면 $0) */
   estimated_cost_usd: number;
-  /** free tier (1500 RPD)에 카운트되는 호출 수 */
   request_count: number;
 };
 
-// item_notes_income / item_notes_balance 제외 — Vercel Hobby 60초 제한 내 완료하기 위해.
-// 라인아이템 모달용 설명이라 메인 분석 품질에는 영향 없음.
-const SECTIONS = [
-  "top_verdict_and_categories",
-  "dashboard_insight",
-  "bs_insight",
-  "is_insight",
-  "cf_insight",
-] as const;
+type AllInOneResult = {
+  top_verdict: TopVerdict;
+  categories: CategoryNarrative[];
+  pages: {
+    dashboard: PageNarrative;
+    balance_sheet: PageNarrative;
+    income_statement: PageNarrative;
+    cash_flow: PageNarrative;
+  };
+};
 
 export async function generateNarrative(
   raw: RawCompanyData,
   computed: ComputedMetrics,
   opts: GenerateNarrativeOptions = {}
 ): Promise<{ narrative: CompanyNarrative; usage: NarrativeUsage }> {
-  const total = SECTIONS.length;
-  if (opts.verbose) console.log(`[${total} sections] 동시 호출 시작...`);
+  if (opts.verbose) console.log("[all_in_one] 단일 호출 시작...");
+  opts.onProgress?.("all_in_one", 0, 1);
 
-  const settled = await Promise.all(
-    SECTIONS.map(async (section, i) => {
-      opts.onProgress?.(section, i, total);
-      const r = await generateSection(section, raw, computed, {
-        verbose: opts.verbose,
-      });
-      if (opts.verbose) console.log(`  [${i + 1}/${total}] ${section} done`);
-      return [section, r] as const;
-    })
+  const result: GenerateResult<AllInOneResult> = await generateSection(
+    "all_in_one",
+    raw,
+    computed,
+    { verbose: opts.verbose }
   );
-  const results: Record<string, GenerateResult> = Object.fromEntries(settled);
 
-  // 결과 조합
-  const tvc = results.top_verdict_and_categories.data as {
-    top_verdict: TopVerdict;
-    categories: CategoryNarrative[];
-  };
-  const dashInsight = results.dashboard_insight.data as PageNarrative;
-  const bsInsight = results.bs_insight.data as PageNarrative;
-  const isInsight = results.is_insight.data as PageNarrative;
-  const cfInsight = results.cf_insight.data as PageNarrative;
+  if (opts.verbose) console.log("[all_in_one] 완료");
+
+  const d = result.data;
   const narrative: CompanyNarrative = {
-    top_verdict: tvc.top_verdict,
+    top_verdict: d.top_verdict,
+    categories: d.categories,
     pages: {
-      dashboard: dashInsight,
-      balance_sheet: bsInsight,
-      income_statement: isInsight,
-      cash_flow: cfInsight,
+      dashboard: d.pages.dashboard,
+      balance_sheet: d.pages.balance_sheet,
+      income_statement: d.pages.income_statement,
+      cash_flow: d.pages.cash_flow,
     },
-    categories: tvc.categories,
   };
 
-  // Usage 합산
-  const totals = SECTIONS.reduce(
-    (acc, s) => {
-      const u = results[s].usage;
-      acc.total_input_tokens += u.input_tokens;
-      acc.total_output_tokens += u.output_tokens;
-      return acc;
-    },
-    {
-      total_input_tokens: 0,
-      total_output_tokens: 0,
-    }
-  );
-
-  // Gemini 2.5 Flash pricing: $0.30/M input, $2.50/M output (paid tier).
-  // Free tier 안이면 실제 비용 0.
-  const cost =
-    (totals.total_input_tokens * 0.3) / 1_000_000 +
-    (totals.total_output_tokens * 2.5) / 1_000_000;
+  const u = result.usage;
+  const cost = (u.input_tokens * 0.3) / 1_000_000 + (u.output_tokens * 2.5) / 1_000_000;
 
   return {
     narrative,
     usage: {
-      ...totals,
+      total_input_tokens: u.input_tokens,
+      total_output_tokens: u.output_tokens,
       estimated_cost_usd: cost,
-      request_count: SECTIONS.length,
+      request_count: 1,
     },
   };
 }
