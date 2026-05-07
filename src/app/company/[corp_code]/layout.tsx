@@ -10,6 +10,7 @@ import { MetaBar } from "@/components/MetaBar";
 import { DataGapsBadge } from "@/components/DataGapsBadge";
 import { detectDataGaps } from "@/lib/data-gaps";
 import Link from "next/link";
+import { NavTabs } from "@/components/NavTabs";
 
 export async function generateMetadata({
   params,
@@ -78,17 +79,7 @@ export default async function CompanyLayout({
           unit={raw.meta.currency_unit}
           source={raw.meta.source}
         />
-        <nav className="flex flex-wrap gap-1 border-b border-gray-100 pb-2">
-          {navItems.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className="rounded-md px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-100"
-            >
-              {n.label}
-            </Link>
-          ))}
-        </nav>
+        <NavTabs items={navItems} />
         {children}
       </div>
     </main>

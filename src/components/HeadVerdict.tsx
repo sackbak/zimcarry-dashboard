@@ -28,6 +28,7 @@ export function HeadVerdict({
   asOfNote,
   rightSlot,
   insight,
+  dark = false,
 }: {
   topic: string;
   status: string;
@@ -38,6 +39,7 @@ export function HeadVerdict({
   asOfNote?: string;
   rightSlot?: React.ReactNode;
   insight?: InsightSection;
+  dark?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [activeKpi, setActiveKpi] = useState<VerdictKpi | null>(null);
@@ -46,7 +48,12 @@ export function HeadVerdict({
   return (
     <>
       <TermScope>
-      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-sm">
+      <div className={cn(
+        "overflow-hidden rounded-2xl border shadow-sm",
+        dark
+          ? "border-white/10 bg-white/5"
+          : "border-[var(--border)] bg-white"
+      )}>
         <div className={cn("h-1 w-full", SIGNAL_BAR[signal])} />
 
         <button
@@ -84,11 +91,17 @@ export function HeadVerdict({
                 )}
               </div>
 
-              <h2 className="text-xl font-bold leading-snug tracking-tight text-gray-900 md:text-2xl">
+              <h2 className={cn(
+                "text-xl font-bold leading-snug tracking-tight md:text-2xl",
+                dark ? "text-white" : "text-gray-900"
+              )}>
                 <RichText text={headline} />
               </h2>
 
-              <p className="max-w-3xl text-sm leading-relaxed text-gray-600">
+              <p className={cn(
+                "max-w-3xl text-sm leading-relaxed",
+                dark ? "text-white/70" : "text-gray-600"
+              )}>
                 <RichText text={message} />
               </p>
             </div>

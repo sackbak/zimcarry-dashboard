@@ -100,63 +100,72 @@ export default async function CompanyDashboard({
       </header>
 
       {narrative ? (
-        <HeadVerdict
-          topic="종합"
-          status={narrative.top_verdict.label.replace(/^[^\s]+\s/, "")}
-          signal={narrative.top_verdict.signal}
-          headline={narrative.pages.dashboard.headline}
-          message={narrative.pages.dashboard.message}
-          asOfNote={`${raw.meta.report_date} 기준 / ${years.length}개년 (${raw.meta.data_period ?? years[0] + "~" + lastYear}) · ${lastYear} 결산`}
-          insight={narrative.pages.dashboard.insight}
-        />
-      ) : (
-        <LiteHeader corpCode={corp_code} years={years} reportDate={raw.meta.report_date} />
-      )}
+        /* ── AI 분석 활성 — 다크 Grok 스타일 섹션 ── */
+        <div className="ai-reveal space-y-4 rounded-2xl bg-gray-950 p-4 md:p-6">
+          {/* 상단 배지 */}
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-white/70">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              AI 정밀 분석
+            </span>
+            <span className="text-[11px] text-white/30">
+              {raw.meta.report_date} 기준 · {lastYear} 결산
+            </span>
+          </div>
 
-      {/* 5 categories — narrative 있으면 LLM 코멘트, 없으면 결정적 신호등만 */}
-      <section className="space-y-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-semibold text-gray-900">
-            5대 재무 카테고리
-            {!narrative && (
-              <span className="ml-2 text-[11px] font-medium text-amber-600">
-                · 신호등만 (AI 분석 시 코멘트 추가)
-              </span>
-            )}
-          </h2>
-          <span className="text-xs text-gray-400">
-            성장성 / 수익성 / 안정성 / 활동성 / 현금흐름
-          </span>
+          <div className="ai-reveal ai-reveal-delay-1">
+            <HeadVerdict
+              topic="종합"
+              status={narrative.top_verdict.label.replace(/^[^\s]+\s/, "")}
+              signal={narrative.top_verdict.signal}
+              headline={narrative.pages.dashboard.headline}
+              message={narrative.pages.dashboard.message}
+              asOfNote={`${years.length}개년 (${raw.meta.data_period ?? years[0] + "~" + lastYear})`}
+              insight={narrative.pages.dashboard.insight}
+              dark
+            />
+          </div>
+
+          {/* 5대 카테고리 */}
+          <div className="ai-reveal ai-reveal-delay-2 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
+            {narrative.categories.map((c) => (
+              <CategoryDetailCard
+                key={c.name}
+                category={{ name: c.name, signal: c.signal, summary: c.summary, comment: c.comment }}
+                computed={computed}
+                isLite={false}
+                dark
+              />
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {narrative
-            ? narrative.categories.map((c) => (
+      ) : (
+        <>
+          <LiteHeader corpCode={corp_code} years={years} reportDate={raw.meta.report_date} />
+          {/* Lite 카테고리 */}
+          <section className="space-y-3">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-base font-semibold text-gray-900">
+                5대 재무 카테고리
+                <span className="ml-2 text-[11px] font-medium text-amber-600">
+                  · 신호등만 (AI 분석 시 코멘트 추가)
+                </span>
+              </h2>
+              <span className="text-xs text-gray-400">성장성 / 수익성 / 안정성 / 활동성 / 현금흐름</span>
+            </div>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+              {computeLiteCategories(computed).map((c) => (
                 <CategoryDetailCard
                   key={c.name}
-                  category={{
-                    name: c.name,
-                    signal: c.signal,
-                    summary: c.summary,
-                    comment: c.comment,
-                  }}
-                  computed={computed}
-                  isLite={false}
-                />
-              ))
-            : computeLiteCategories(computed).map((c) => (
-                <CategoryDetailCard
-                  key={c.name}
-                  category={{
-                    name: c.name,
-                    signal: c.signal,
-                    summary: c.summary,
-                  }}
+                  category={{ name: c.name, signal: c.signal, summary: c.summary }}
                   computed={computed}
                   isLite
                 />
               ))}
-        </div>
-      </section>
+            </div>
+          </section>
+        </>
+      )}
 
       {/* Top KPIs — 결정적, 항상 표시. 카드 클릭 → 정의 + 5년 추이 + 임계치 모달 */}
       <section className="space-y-3">
@@ -186,7 +195,7 @@ export default async function CompanyDashboard({
       {/* Scenarios (LLM) + Trend (결정적) */}
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {narrative && (
-          <div className="xl:col-span-2">
+          <div className="ai-reveal ai-reveal-delay-3 xl:col-span-2">
             <ScenariosCard verdict={narrative.top_verdict} />
           </div>
         )}
@@ -298,53 +307,41 @@ function LiteHeader({
 function ScenariosCard({ verdict }: { verdict: TopVerdict }) {
   const sig = verdict.signal as Signal;
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-gray-950 shadow-sm">
       <div className={cn("h-1 w-full", SIGNAL_BAR[sig])} />
       <div className="flex flex-col gap-5 p-6">
         <div className="space-y-1">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-white/40">
             종합 진단
           </div>
-          <p className="text-sm leading-relaxed text-gray-700">
+          <p className="text-sm leading-relaxed text-white/80">
             <RichText text={verdict.summary} />
           </p>
         </div>
         {verdict.key_question && (
-          <div className="rounded-lg border-l-4 border-l-blue-400 bg-blue-50/40 px-4 py-3">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-700">
+          <div className="rounded-lg border-l-4 border-l-blue-500 bg-blue-500/10 px-4 py-3">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-400">
               핵심 질문
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-gray-800">
+            <p className="mt-1 text-sm leading-relaxed text-white/80">
               {verdict.key_question}
             </p>
           </div>
         )}
         <div className="grid gap-3 md:grid-cols-3">
-          <ScenarioBlock
-            tone="bullish"
-            label="🟢 Bullish"
-            text={verdict.scenarios.bullish}
-          />
-          <ScenarioBlock
-            tone="base"
-            label="⚪ Base"
-            text={verdict.scenarios.base}
-          />
-          <ScenarioBlock
-            tone="bearish"
-            label="🔴 Bearish"
-            text={verdict.scenarios.bearish}
-          />
+          <ScenarioBlock tone="bullish" label="Bullish" text={verdict.scenarios.bullish} />
+          <ScenarioBlock tone="base" label="Base" text={verdict.scenarios.base} />
+          <ScenarioBlock tone="bearish" label="Bearish" text={verdict.scenarios.bearish} />
         </div>
         {verdict.actions && verdict.actions.length > 0 && (
-          <div className="space-y-2">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+          <div className="space-y-2 border-t border-white/10 pt-4">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
               다음 액션 · M&A / 투자 담당자
             </div>
-            <ol className="space-y-1.5">
+            <ol className="space-y-2">
               {verdict.actions.map((action, i) => (
-                <li key={i} className="flex gap-2 text-sm leading-relaxed text-gray-700">
-                  <span className="shrink-0 font-mono text-[11px] font-semibold text-gray-400 mt-0.5">
+                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-white/70">
+                  <span className="mt-0.5 shrink-0 font-mono text-[11px] font-bold text-white/30">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span>{action}</span>
@@ -367,18 +364,21 @@ function ScenarioBlock({
   label: string;
   text: string;
 }) {
-  const accent =
+  const styles =
     tone === "bullish"
-      ? "border-l-emerald-400 bg-emerald-50/30"
+      ? { border: "border-l-emerald-500", bg: "bg-emerald-500/10", dot: "bg-emerald-400", label: "text-emerald-400" }
       : tone === "bearish"
-        ? "border-l-rose-400 bg-rose-50/30"
-        : "border-l-slate-300 bg-slate-50/30";
+        ? { border: "border-l-rose-500", bg: "bg-rose-500/10", dot: "bg-rose-400", label: "text-rose-400" }
+        : { border: "border-l-slate-500", bg: "bg-white/5", dot: "bg-slate-400", label: "text-slate-400" };
   return (
-    <div className={cn("rounded-md border-l-4 px-3 py-2", accent)}>
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
-        {label}
+    <div className={cn("rounded-md border-l-4 px-3 py-2.5", styles.border, styles.bg)}>
+      <div className="mb-1 flex items-center gap-1.5">
+        <span className={cn("h-1.5 w-1.5 rounded-full", styles.dot)} />
+        <div className={cn("text-[10px] font-semibold uppercase tracking-wider", styles.label)}>
+          {label}
+        </div>
       </div>
-      <p className="mt-1 text-xs leading-relaxed text-gray-700">{text}</p>
+      <p className="text-xs leading-relaxed text-white/70">{text}</p>
     </div>
   );
 }

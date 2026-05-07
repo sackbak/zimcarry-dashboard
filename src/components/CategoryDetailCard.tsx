@@ -183,10 +183,12 @@ export function CategoryDetailCard({
   category,
   computed,
   isLite,
+  dark = false,
 }: {
   category: CategoryCardData;
   computed: ComputedMetrics;
   isLite: boolean;
+  dark?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const sig = category.signal;
@@ -198,16 +200,23 @@ export function CategoryDetailCard({
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "group/cat flex h-full flex-col overflow-hidden rounded-xl border bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md",
-          isLite ? "border-dashed border-[var(--border)]" : "border-[var(--border)]"
+          "group/cat flex h-full flex-col overflow-hidden rounded-xl border text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+          dark
+            ? "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+            : isLite
+              ? "border-dashed border-[var(--border)] bg-white hover:border-blue-300"
+              : "border-[var(--border)] bg-white hover:border-blue-300"
         )}
       >
         <div className={cn("h-1 w-full", SIGNAL_BAR[sig])} />
         <div className="flex flex-1 flex-col gap-3 p-5">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-gray-900">
+            <h3 className={cn(
+              "flex items-center gap-1.5 text-sm font-semibold",
+              dark ? "text-white" : "text-gray-900"
+            )}>
               {category.name}
-              <Search className="h-3 w-3 text-gray-300 transition-colors group-hover/cat:text-blue-500" />
+              <Search className={cn("h-3 w-3 transition-colors", dark ? "text-white/20 group-hover/cat:text-white/60" : "text-gray-300 group-hover/cat:text-blue-500")} />
             </h3>
             <span
               className={cn(
@@ -220,11 +229,11 @@ export function CategoryDetailCard({
             </span>
           </div>
           {category.comment ? (
-            <p className="text-sm leading-relaxed text-gray-600">
+            <p className={cn("text-sm leading-relaxed", dark ? "text-white/70" : "text-gray-600")}>
               <RichText text={category.comment} />
             </p>
           ) : (
-            <p className="text-xs leading-relaxed text-gray-400">
+            <p className={cn("text-xs leading-relaxed", dark ? "text-white/30" : "text-gray-400")}>
               {rows.length}개 KPI · 클릭해서 상세 보기
             </p>
           )}
