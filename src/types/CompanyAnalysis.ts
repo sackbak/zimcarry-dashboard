@@ -242,13 +242,14 @@ export interface ItemNote {
 export interface TopVerdict {
   signal: Signal;
   label: string;                             // "🟡 전환기" 같은 라벨
-  summary: string;                           // 1 문장 종합
+  summary: string;                           // 2-3 문장 종합
   key_question: string;                      // 투자/M&A 핵심 질문
   scenarios: {
-    bullish: string;
+    bullish: string;                         // 2-3문장, 트리거 + 결과
     base: string;
     bearish: string;
   };
+  actions?: string[];                        // 3-5개 구체적 다음 스텝 (M&A/투자 담당자용)
 }
 
 export interface CompanyNarrative {

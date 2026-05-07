@@ -336,6 +336,23 @@ function ScenariosCard({ verdict }: { verdict: TopVerdict }) {
             text={verdict.scenarios.bearish}
           />
         </div>
+        {verdict.actions && verdict.actions.length > 0 && (
+          <div className="space-y-2">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+              다음 액션 · M&A / 투자 담당자
+            </div>
+            <ol className="space-y-1.5">
+              {verdict.actions.map((action, i) => (
+                <li key={i} className="flex gap-2 text-sm leading-relaxed text-gray-700">
+                  <span className="shrink-0 font-mono text-[11px] font-semibold text-gray-400 mt-0.5">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span>{action}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
     </div>
   );
