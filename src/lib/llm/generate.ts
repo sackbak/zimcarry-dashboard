@@ -16,7 +16,6 @@ import type {
   TopVerdict,
   CategoryNarrative,
   PageNarrative,
-  ItemNote,
 } from "@/types/CompanyAnalysis";
 
 export type GenerateNarrativeOptions = {
@@ -34,14 +33,14 @@ export type NarrativeUsage = {
   request_count: number;
 };
 
+// item_notes_income / item_notes_balance 제외 — Vercel Hobby 60초 제한 내 완료하기 위해.
+// 라인아이템 모달용 설명이라 메인 분석 품질에는 영향 없음.
 const SECTIONS = [
   "top_verdict_and_categories",
   "dashboard_insight",
   "bs_insight",
   "is_insight",
   "cf_insight",
-  "item_notes_income",
-  "item_notes_balance",
 ] as const;
 
 export async function generateNarrative(
@@ -73,9 +72,6 @@ export async function generateNarrative(
   const bsInsight = results.bs_insight.data as PageNarrative;
   const isInsight = results.is_insight.data as PageNarrative;
   const cfInsight = results.cf_insight.data as PageNarrative;
-  const incomeNotes = results.item_notes_income.data as Record<string, ItemNote>;
-  const balanceNotes = results.item_notes_balance.data as Record<string, ItemNote>;
-
   const narrative: CompanyNarrative = {
     top_verdict: tvc.top_verdict,
     pages: {
@@ -85,10 +81,6 @@ export async function generateNarrative(
       cash_flow: cfInsight,
     },
     categories: tvc.categories,
-    item_notes: {
-      income: incomeNotes,
-      balance: balanceNotes,
-    },
   };
 
   // Usage 합산

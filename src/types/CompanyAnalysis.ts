@@ -261,7 +261,7 @@ export interface CompanyNarrative {
     cash_flow: PageNarrative;
   };
   categories: CategoryNarrative[];
-  item_notes: {
+  item_notes?: {
     income: Record<string, ItemNote>;        // key = line item name
     balance: Record<string, ItemNote>;
   };
