@@ -80,80 +80,84 @@ export async function generateSection<T = unknown>(
   const dataContext = buildDataContext(raw, computed, section);
   const instruction = SECTION_PROMPTS[section];
 
-  // ── Gemini 시도 (2.5-flash → 2.0-flash) ──────────────────────────
-  const gemini = getGeminiClient();
-  const makeGeminiModel = (modelName: string) =>
-    gemini.getGenerativeModel({
-      model: modelName,
-      systemInstruction: SYSTEM_PROMPT,
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: opts.temperature ?? 0.3,
-      },
-    });
-
   let rawText = "";
   let inputTokens = 0;
   let outputTokens = 0;
   let lastError: unknown;
   let succeeded = false;
 
-  const geminiModels = [GEMINI_PRIMARY, GEMINI_FALLBACK];
-  for (let mi = 0; mi < geminiModels.length; mi++) {
-    const modelName = geminiModels[mi];
-    const isLast = mi === geminiModels.length - 1;
-    const model = makeGeminiModel(modelName);
+  // ── GPT-4o-mini 우선 (OPENAI_API_KEY 있을 때) ─────────────────────
+  const openai = getOpenAIClient();
+  if (openai) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const result = await model.generateContent([
-          { text: dataContext },
-          { text: instruction },
-        ]);
-        if (opts.verbose && mi > 0) {
-          console.log(`  [${section}] fallback → ${modelName} succeeded`);
-        }
-        rawText = result.response.text();
-        inputTokens = result.response.usageMetadata?.promptTokenCount ?? 0;
-        outputTokens = result.response.usageMetadata?.candidatesTokenCount ?? 0;
+        const completion = await openai.chat.completions.create({
+          model: GPT_MODEL,
+          temperature: opts.temperature ?? 0.3,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: `${dataContext}\n\n${instruction}` },
+          ],
+        });
+        rawText = completion.choices[0].message.content ?? "{}";
+        inputTokens = completion.usage?.prompt_tokens ?? 0;
+        outputTokens = completion.usage?.completion_tokens ?? 0;
         succeeded = true;
         break;
       } catch (e: unknown) {
         lastError = e;
         const status = (e as { status?: number }).status;
-        if (opts.verbose) console.log(`  [${section}] ${modelName} ${status ?? "err"} attempt ${attempt + 1}`);
-        // 429: 잠깐 기다렸다 같은 모델 재시도
-        if (status === 429) { await new Promise((r) => setTimeout(r, 3000)); continue; }
-        // 503/500/502: 1회 재시도 후 다음 모델로
-        if (status === 503 || status === 500 || status === 502) {
-          if (attempt === 0) { await new Promise((r) => setTimeout(r, 1000)); continue; }
-          break;
-        }
-        // 그 외(404 포함): 마지막 모델이면 throw, 아니면 다음 모델 시도
-        if (isLast) throw e;
-        break;
+        if (opts.verbose) console.log(`  [${section}] gpt-4o-mini ${status ?? "err"} attempt ${attempt + 1}`);
+        if (attempt === 0) { await new Promise((r) => setTimeout(r, 1000)); continue; }
       }
     }
-    if (succeeded) break;
   }
 
-  // ── GPT-4o-mini 폴백 (OPENAI_API_KEY 있을 때만) ────────────────────
+  // ── Gemini 폴백 (GPT 없거나 실패 시) ─────────────────────────────
   if (!succeeded) {
-    const openai = getOpenAIClient();
-    if (openai) {
-      if (opts.verbose) console.log(`  [${section}] Gemini 전부 실패 → gpt-4o-mini 시도`);
-      const completion = await openai.chat.completions.create({
-        model: GPT_MODEL,
-        temperature: opts.temperature ?? 0.3,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: `${dataContext}\n\n${instruction}` },
-        ],
+    const gemini = getGeminiClient();
+    const makeGeminiModel = (modelName: string) =>
+      gemini.getGenerativeModel({
+        model: modelName,
+        systemInstruction: SYSTEM_PROMPT,
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: opts.temperature ?? 0.3,
+        },
       });
-      rawText = completion.choices[0].message.content ?? "{}";
-      inputTokens = completion.usage?.prompt_tokens ?? 0;
-      outputTokens = completion.usage?.completion_tokens ?? 0;
-      succeeded = true;
+
+    const geminiModels = [GEMINI_PRIMARY, GEMINI_FALLBACK];
+    for (let mi = 0; mi < geminiModels.length; mi++) {
+      const modelName = geminiModels[mi];
+      const isLast = mi === geminiModels.length - 1;
+      const model = makeGeminiModel(modelName);
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const result = await model.generateContent([
+            { text: dataContext },
+            { text: instruction },
+          ]);
+          if (opts.verbose) console.log(`  [${section}] gemini fallback → ${modelName} succeeded`);
+          rawText = result.response.text();
+          inputTokens = result.response.usageMetadata?.promptTokenCount ?? 0;
+          outputTokens = result.response.usageMetadata?.candidatesTokenCount ?? 0;
+          succeeded = true;
+          break;
+        } catch (e: unknown) {
+          lastError = e;
+          const status = (e as { status?: number }).status;
+          if (opts.verbose) console.log(`  [${section}] ${modelName} ${status ?? "err"} attempt ${attempt + 1}`);
+          if (status === 429) { await new Promise((r) => setTimeout(r, 3000)); continue; }
+          if (status === 503 || status === 500 || status === 502) {
+            if (attempt === 0) { await new Promise((r) => setTimeout(r, 1000)); continue; }
+            break;
+          }
+          if (isLast) throw e;
+          break;
+        }
+      }
+      if (succeeded) break;
     }
   }
 
