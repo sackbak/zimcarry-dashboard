@@ -13,6 +13,7 @@ import { balanceSections } from "@/lib/financial-sections";
 import { SectionCard } from "@/components/SectionCard";
 import { ItemTableSection } from "@/components/ItemTableSection";
 import { HeadVerdict } from "@/components/HeadVerdict";
+import { AIGenerateButton } from "@/components/GenerateNarrativeButton";
 import { fmtPct } from "@/lib/format";
 
 export const dynamicParams = true;
@@ -47,7 +48,7 @@ export default async function BalanceSheetPage({
   const sections = balanceSections(raw, computed, narrative);
 
   // 안정성 카테고리 — narrative 있으면 사용
-  const stab = narrative?.categories.find((c) => c.name === "안정성");
+  const stab = narrative?.categories?.find((c) => c.name === "안정성");
   const stability = computed.ratios.stability;
   const debtRatio = stability.debt_ratio?.[lastIdx];
   const currentRatio = stability.current_ratio?.[lastIdx];
@@ -64,11 +65,11 @@ export default async function BalanceSheetPage({
         </h1>
       </header>
 
-      {narrative && stab ? (
+      {narrative?.pages?.balance_sheet ? (
         <HeadVerdict
           topic="재무 안정성"
-          status={stab.summary.replace(/^[^\s]+\s/, "")}
-          signal={stab.signal}
+          status={stab?.summary.replace(/^[^\s]+\s/, "") ?? "AI 분석"}
+          signal={stab?.signal ?? "yellow"}
           headline={narrative.pages.balance_sheet.headline}
           message={narrative.pages.balance_sheet.message}
           asOfNote={`${raw.meta.report_date} 기준 / ${years[lastIdx]} 결산`}
@@ -93,18 +94,23 @@ export default async function BalanceSheetPage({
         />
       ) : (
         <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5">
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-800">
-            ⚡ Lite mode
-          </span>
-          <p className="mt-2 text-sm text-gray-800">
-            부채비율 <b>{fmtPct(debtRatio, { digits: 1 })}</b> · 유동비율{" "}
-            <b>{fmtPct(currentRatio, { digits: 1 })}</b> · 자기자본비율{" "}
-            <b>{fmtPct(equityRatio, { digits: 1 })}</b>{" "}
-            <span className="text-gray-500">({years[lastIdx]} 결산)</span>
-          </p>
-          <p className="mt-1 text-[11px] text-gray-500">
-            AI 서술형 분석은 dashboard 페이지에서 생성.
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                Lite mode
+              </span>
+              <p className="text-sm text-gray-800">
+                부채비율 <b>{fmtPct(debtRatio, { digits: 1 })}</b> · 유동비율{" "}
+                <b>{fmtPct(currentRatio, { digits: 1 })}</b> · 자기자본비율{" "}
+                <b>{fmtPct(equityRatio, { digits: 1 })}</b>{" "}
+                <span className="text-gray-500">({years[lastIdx]} 결산)</span>
+              </p>
+              <p className="text-[11px] text-gray-500">
+                AI 인사이트를 생성하면 자본구조·부채만기·자산환금성·운전자본 변화를 다룬 심층 분석이 추가됩니다.
+              </p>
+            </div>
+            <AIGenerateButton id={corp_code} tab="balance_sheet" variant="compact" />
+          </div>
         </div>
       )}
 

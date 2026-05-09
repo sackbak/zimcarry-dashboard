@@ -109,35 +109,7 @@ type ContextScope = {
 };
 
 const SCOPES: Record<string, ContextScope> = {
-  main_verdict: {
-    fin: ["income_statement", "balance_sheet", "cash_flow_raw"],
-    ratios: true,
-    derived_cf: true,
-    top_kpis: true,
-    per_item: null,
-  },
-  page_insights: {
-    fin: ["income_statement", "balance_sheet", "cash_flow_raw"],
-    ratios: true,
-    derived_cf: true,
-    top_kpis: false,
-    per_item: null,
-  },
-  all_in_one: {
-    fin: ["income_statement", "balance_sheet", "cash_flow_raw"],
-    ratios: true,
-    derived_cf: true,
-    top_kpis: true,
-    per_item: null,
-  },
-  top_verdict_and_categories: {
-    fin: ["income_statement", "balance_sheet", "cash_flow_raw"],
-    ratios: true,
-    derived_cf: true,
-    top_kpis: true,
-    per_item: null,
-  },
-  dashboard_insight: {
+  dashboard_full: {
     fin: ["income_statement", "balance_sheet", "cash_flow_raw"],
     ratios: true,
     derived_cf: true,
@@ -165,28 +137,14 @@ const SCOPES: Record<string, ContextScope> = {
     top_kpis: false,
     per_item: null,
   },
-  item_notes_income: {
-    fin: ["income_statement"],
-    ratios: false,
-    derived_cf: false,
-    top_kpis: false,
-    per_item: "income",
-  },
-  item_notes_balance: {
-    fin: ["balance_sheet"],
-    ratios: false,
-    derived_cf: false,
-    top_kpis: false,
-    per_item: "balance",
-  },
 };
 
 export function buildDataContext(
   raw: RawCompanyData,
   computed: ComputedMetrics,
-  section: string = "top_verdict_and_categories"
+  section: string = "dashboard_full"
 ): string {
-  const scope = SCOPES[section] ?? SCOPES.top_verdict_and_categories;
+  const scope = SCOPES[section] ?? SCOPES.dashboard_full;
 
   const fin: Record<string, Record<string, string[]>> = {};
   for (const k of scope.fin) {
@@ -223,59 +181,55 @@ ${JSON.stringify(computedSlice, null, 2)}
 // Per-section instruction prompts (variable — placed AFTER cache breakpoint)
 // ────────────────────────────────────────────────────────────────────
 
-export const PROMPT_TOP_VERDICT_AND_CATEGORIES = `위 데이터를 보고 다음 JSON을 출력하세요.
+export const PROMPT_DASHBOARD_FULL = `위 데이터를 분석해서 다음 JSON을 출력하세요. 필드명 변경 금지.
 
 {
   "top_verdict": {
     "signal": "green" | "yellow" | "red",
     "label": "🟢 양호" | "🟡 전환기" | "🔴 위험" 등 한 단어 라벨,
-    "summary": "<2~3문장 종합 진단. 이 회사를 처음 보는 M&A 담당자가 30초 안에 핵심 리스크/기회를 파악할 수 있어야 함. 구체적 수치 포함 필수.>",
-    "key_question": "<딜 검토에서 반드시 답해야 할 핵심 질문 1개. '이 회사의 XX는 YY이고 ZZ가 미해결인데, 그렇다면 AA는 가능한가?' 형식으로 구체적으로.>",
+    "summary": "<2~3문장 종합 진단. M&A 담당자가 30초 안에 핵심 리스크/기회 파악. 구체적 수치 필수>",
+    "key_question": "<딜 검토 시 반드시 답해야 할 핵심 질문 1개. '이 회사의 XX는 YY인데 ZZ가 미해결이라면 AA는 가능한가?' 형식>",
     "scenarios": {
-      "bullish": "<2~3문장. 낙관 시나리오 실현 트리거 + 그때 예상 재무 결과>",
-      "base": "<2~3문장. 현재 추세 지속 시 12~24개월 후 모습>",
-      "bearish": "<2~3문장. 핵심 리스크 현실화 트리거 + 최악 결과>"
+      "bullish": "<2문장. 낙관 트리거 + 예상 재무 결과>",
+      "base": "<2문장. 현재 추세 지속 시 12~24개월 후 모습>",
+      "bearish": "<2문장. 핵심 리스크 현실화 + 최악 결과>"
     },
     "actions": [
-      "<M&A/투자 담당자가 다음 7일 내 실행 가능한 구체적 스텝 3~5개. 각 항목은 '어느 자료에서 무엇을 확인' 또는 '어떤 계산을 수행' 형태로. 예: '사업보고서 주석 XX번에서 단기차입금 만기 구조 확인 — YY억 중 ZZ% 1년 내 만기'>"
+      "<M&A/투자 담당자가 7일 내 실행 가능한 구체적 스텝 3~4개. '사업보고서 XX 주석에서 YY 확인' 형태. 막연한 표현 금지>"
     ]
   },
   "categories": [
     {
       "name": "성장성",
       "signal": "green" | "yellow" | "red",
-      "summary": "🟢 우수" 류 한 단어 라벨,
-      "comment": "<2~3문장. 단순 수치 재확인 금지 — 성장 질(유기적 vs 외형), 둔화 변곡점, 향후 12개월 방향성까지 포함. RichText>",
-      "kpi_refs": ["computed.ratios의 키 또는 top_kpis의 label"]
+      "summary": "🟢 우수" 등 한 단어 라벨,
+      "comment": "<2문장. 성장 질(유기적 vs 외형), 변곡점, 향후 방향성. 수치 포함>",
+      "kpi_refs": []
     },
-    { "name": "수익성", ... },
-    { "name": "안정성", ... },
-    { "name": "활동성", ... },
-    { "name": "현금흐름", ... }
-  ]
-}
-
-판단 기준:
-- top_verdict.signal: 5개 카테고리 신호 종합. 자본잠식 한번이라도 있으면 최소 yellow.
-- categories[].signal: 단순 평균 X. 자본잠식·이자보상 음수 같은 critical은 yellow/red 강제.
-- actions: 막연한 권고("검토 필요") 금지. 실행 가능한 구체적 스텝만.`;
-
-export const PROMPT_DASHBOARD_INSIGHT = `위 데이터를 보고 dashboard 페이지의 종합 insight를 다음 JSON으로 출력.
-
-{
-  "headline": "<1줄, 가장 두드러진 테마. 위험 부분만 ==강조text== 식으로 감싸기. ==red== 같은 태그 형식 금지. bold/italic/heading 등 일체 금지. 80자 이내>",
-  "message": "<1~2문장 보조 설명. 구체적 수치 포함>",
-  "insight": {
-    "conclusion": "<1~2문장 결론. 수치 포함 필수.>",
-    "evidence": ["<3~5개 항목. 각 항목 한 줄: 구체적 숫자 + 의미. 단순 수치 나열 금지>"],
-    "reasoning": "<2~3문장 인과관계 서술>",
-    "accounting": ["<2~4개 K-IFRS 회계 watchpoint>"],
-    "mna": ["<2~4개 M&A 관점 — EV/EBITDA 밸류 범위, 청산가치, 협상 레버리지 등>"],
-    "monitoring": ["<2~4개 분기별 추적 지표>"]
+    { "name": "수익성", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] },
+    { "name": "안정성", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] },
+    { "name": "활동성", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] },
+    { "name": "현금흐름", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] }
+  ],
+  "dashboard": {
+    "headline": "<1줄 핵심 테마. 위험 부분만 ==강조== 감싸기. 80자 이내>",
+    "message": "<1~2문장 보조 설명. 구체적 수치 포함>",
+    "insight": {
+      "conclusion": "<1~2문장 결론. 수치 포함 필수>",
+      "evidence": ["<3~4개. 각 항목 한 줄: 구체적 숫자 + 의미. 단순 사실 나열 금지>"],
+      "reasoning": "<2문장 인과관계 서술. '왜 이 수치가 이 의미를 갖는가'>",
+      "accounting": ["<K-IFRS 회계·감사 관전 포인트 2~3개>"],
+      "mna": ["<M&A 관점 2~3개. EV/EBITDA·청산가치·레버리지 등>"],
+      "monitoring": ["<분기별 추적 지표 2~3개>"]
+    }
   }
 }
 
-대시보드 강조점: 5개 카테고리를 관통하는 한 가지 핵심 테마 + 이것이 투자/M&A 의사결정에 미치는 함의.`;
+판단 기준:
+- top_verdict.signal: 5개 카테고리 신호 종합. 자본잠식 1회 이상이면 최소 yellow.
+- categories[].signal: 자본잠식·이자보상 음수 같은 critical은 red/yellow 강제.
+- actions: 구체적 스텝만. "검토 필요" 같은 막연한 표현 금지.
+- dashboard.insight: 5개 카테고리를 관통하는 한 가지 핵심 테마. evidence는 단순 수치 나열이 아닌 변곡점·이례적 패턴·구조적 의미.`;
 
 /** PageNarrative JSON 스키마 — BS/IS/CF prompt에서 재사용 */
 const PAGE_NARRATIVE_SCHEMA = `{
@@ -324,232 +278,11 @@ CF 페이지 강조점:
 - Runway, 이자보상배율
 - 외부 자금 의존도 (누적 FCF vs 누적 투자유치)`;
 
-export const PROMPT_ITEM_NOTES_INCOME = `formatted_financials.income_statement에 있는 모든 line item에 대해 다음 JSON을 출력.
-
-{
-  "<line item key>": {
-    "trend": "<5년 추이 한 단어 — '11.5배 증가', '4년 음수' 등>",
-    "learn_note": "<비전공자용 1문장 — 이 항목이 무엇이고 왜 보는지>",
-    "investment_note": "<투자/M&A 관점 1문장 — 5년치 추이 의미>"
-  },
-  ...
-}
-
-반드시 formatted_financials.income_statement의 모든 키에 대해 항목 생성. 키 이름 그대로 사용.
-note는 각 1문장으로 짧게.`;
-
-export const PROMPT_ITEM_NOTES_BALANCE = `formatted_financials.balance_sheet에 있는 모든 line item에 대해 동일한 JSON 형식으로 출력.
-
-{
-  "<line item key>": {
-    "trend": "<5년 추이 한 단어>",
-    "learn_note": "<비전공자용 1문장>",
-    "investment_note": "<투자/M&A 관점 1문장>"
-  },
-  ...
-}
-
-반드시 formatted_financials.balance_sheet의 모든 키 포함. note는 각 1문장으로 짧게.`;
-
-export const PROMPT_MAIN_VERDICT = `위 데이터를 보고 다음 JSON을 출력하세요. 필드명 변경 금지.
-
-{
-  "top_verdict": {
-    "signal": "green" | "yellow" | "red",
-    "label": "🟢 양호" | "🟡 전환기" | "🔴 위험" 등 한 단어 라벨,
-    "summary": "<2~3문장. M&A 담당자가 30초 안에 핵심 리스크/기회 파악. 구체적 수치 필수>",
-    "key_question": "<딜 검토 시 반드시 답해야 할 핵심 질문 1개. '이 회사의 XX는 YY인데, ZZ가 미해결이라면 AA는 가능한가?' 형식>",
-    "scenarios": {
-      "bullish": "<2문장. 낙관 트리거 + 예상 재무 결과>",
-      "base": "<2문장. 현재 추세 지속 시 12~24개월 후>",
-      "bearish": "<2문장. 핵심 리스크 현실화 + 최악 결과>"
-    },
-    "actions": [
-      "<M&A/투자 담당자가 7일 내 실행 가능한 구체적 스텝 3~4개. '사업보고서 XX 주석에서 YY 확인' 형태>"
-    ]
-  },
-  "categories": [
-    {
-      "name": "성장성",
-      "signal": "green" | "yellow" | "red",
-      "summary": "🟢 우수" 등 한 단어 라벨,
-      "comment": "<2문장. 성장 질(유기적 vs 외형), 변곡점, 향후 방향성. 수치 포함>",
-      "kpi_refs": []
-    },
-    { "name": "수익성", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] },
-    { "name": "안정성", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] },
-    { "name": "활동성", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] },
-    { "name": "현금흐름", "signal": "...", "summary": "...", "comment": "<2문장>", "kpi_refs": [] }
-  ]
-}
-
-판단 기준:
-- top_verdict.signal: 자본잠식 이력 있으면 최소 yellow.
-- categories[].signal: 이자보상배율 음수·자본잠식은 red 강제.
-- actions: "검토 필요" 같은 막연한 표현 금지. 어느 자료 어느 숫자를 확인하는지 명시.
-- comment: 숫자만 보면 알 수 있는 사실 재확인 금지. 변곡점·구조적 의미·방향성 필수.`;
-
-export const PROMPT_PAGE_INSIGHTS = `위 데이터를 보고 4개 페이지의 insight를 다음 JSON으로 출력하세요. 필드명 변경 금지.
-
-{
-  "dashboard": {
-    "headline": "<1줄 핵심 테마. 위험 부분만 ==강조== 감싸기. 80자 이내>",
-    "message": "<1~2문장. 구체적 수치 포함>",
-    "insight": {
-      "conclusion": "<1~2문장 결론. 수치 포함>",
-      "evidence": ["<3~4개. 각 항목 한 줄: 구체적 숫자 + 의미. 단순 사실 나열 금지>"],
-      "reasoning": "<2문장 인과관계. '왜 이 수치가 이 의미를 갖는가'>",
-      "accounting": ["<K-IFRS 회계·감사 관전 포인트 2개>"],
-      "mna": ["<M&A·협상 함의 2개. EV/EBITDA·청산가치·레버리지 등>"],
-      "monitoring": ["<분기별 추적 지표 2개>"]
-    }
-  },
-  "balance_sheet": {
-    "headline": "<자본구조·부채만기·자산질 핵심 테마. 80자 이내>",
-    "message": "<1~2문장. 구체적 수치 포함>",
-    "insight": {
-      "conclusion": "<1~2문장>",
-      "evidence": ["<3~4개>"],
-      "reasoning": "<2문장>",
-      "accounting": ["<2개: 자본잠식·부채만기·자산환금성 중심>"],
-      "mna": ["<2개: 청산가치·협상 레버리지>"],
-      "monitoring": ["<2개>"]
-    }
-  },
-  "income_statement": {
-    "headline": "<매출성장·수익성·비용구조 핵심 테마. 80자 이내>",
-    "message": "<1~2문장. 구체적 수치 포함>",
-    "insight": {
-      "conclusion": "<1~2문장>",
-      "evidence": ["<3~4개>"],
-      "reasoning": "<2문장>",
-      "accounting": ["<2개: 비용구조·운영레버리지·자본화 의심>"],
-      "mna": ["<2개: EBITDA 배수·BEP 달성 시점>"],
-      "monitoring": ["<2개>"]
-    }
-  },
-  "cash_flow": {
-    "headline": "<OCF/FCF·런웨이·CAPEX 핵심 테마. 80자 이내>",
-    "message": "<1~2문장. 구체적 수치 포함>",
-    "insight": {
-      "conclusion": "<1~2문장>",
-      "evidence": ["<3~4개>"],
-      "reasoning": "<2문장>",
-      "accounting": ["<2개: 운전자본 효과·CAPEX 성격>"],
-      "mna": ["<2개: 외부자금 의존도·누적 FCF>"],
-      "monitoring": ["<2개>"]
-    }
-  }
-}
-
-강조점:
-- dashboard: 5개 카테고리를 관통하는 핵심 테마 + 투자/M&A 의사결정 함의.
-- balance_sheet: 자본구조·부채만기·자산환금성·운전자본 변화.
-- income_statement: 매출 CAGR·수익성 트렌드·비용구조·운영레버리지.
-- cash_flow: OCF/FCF 자력생존 여부·런웨이·CAPEX 성격·외부자금 의존도.
-- 각 페이지는 해당 재무제표 관점에만 집중. 페이지 간 중복 최소화.
-- evidence: 단순 수치 재확인 금지. 5년 추이의 변곡점·이례적 패턴·숨겨진 리스크 우선.`;
-
-export const PROMPT_ALL_IN_ONE = `위 데이터를 분석해서 아래 JSON 하나로 모두 출력하세요. 필드 이름 변경 절대 금지.
-
-{
-  "top_verdict": {
-    "signal": "green" | "yellow" | "red",
-    "label": "🟢 양호" | "🟡 전환기" | "🔴 위험" 등 한 단어 라벨,
-    "summary": "<2~3문장 종합 진단. M&A 담당자가 30초 안에 핵심 리스크/기회 파악. 구체적 수치 필수>",
-    "key_question": "<딜 검토 시 반드시 답해야 할 핵심 질문 1개. '이 회사의 XX는 YY이고 ZZ가 미해결인데, AA는 가능한가?' 형식>",
-    "scenarios": {
-      "bullish": "<1~2문장. 낙관 트리거 + 예상 재무 결과>",
-      "base": "<1~2문장. 현재 추세 지속 시 12개월 후>",
-      "bearish": "<1~2문장. 핵심 리스크 현실화 + 최악 결과>"
-    },
-    "actions": [
-      "<M&A/투자 담당자가 7일 내 실행 가능한 구체적 스텝 3개. '어느 자료에서 무엇을 확인' 형태>"
-    ]
-  },
-  "categories": [
-    {
-      "name": "성장성",
-      "signal": "green" | "yellow" | "red",
-      "summary": "🟢 우수" 등 한 단어 라벨,
-      "comment": "<1~2문장. 성장 질, 변곡점, 방향성 포함>",
-      "kpi_refs": []
-    },
-    { "name": "수익성", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] },
-    { "name": "안정성", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] },
-    { "name": "활동성", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] },
-    { "name": "현금흐름", "signal": "...", "summary": "...", "comment": "...", "kpi_refs": [] }
-  ],
-  "pages": {
-    "dashboard": {
-      "headline": "<1줄 핵심 테마. 위험 부분만 ==강조== 감싸기. 80자 이내>",
-      "message": "<1~2문장 보조 설명. 구체적 수치 포함>",
-      "insight": {
-        "conclusion": "<1~2문장 결론. 수치 포함>",
-        "evidence": ["<2~3개. 각 항목 한 줄: 구체적 숫자 + 의미>"],
-        "reasoning": "<1~2문장 인과관계>",
-        "accounting": ["<핵심 K-IFRS watchpoint 2개>"],
-        "mna": ["<핵심 M&A 관점 2개>"],
-        "monitoring": ["<핵심 추적 지표 2개>"]
-      }
-    },
-    "balance_sheet": {
-      "headline": "<자본구조·부채만기·자산질 핵심 테마. 80자 이내>",
-      "message": "<1~2문장. 구체적 수치 포함>",
-      "insight": {
-        "conclusion": "<1~2문장>",
-        "evidence": ["<2~3개>"],
-        "reasoning": "<1~2문장>",
-        "accounting": ["<2개: 자본잠식·부채만기 중심>"],
-        "mna": ["<2개: 청산가치·협상 레버리지>"],
-        "monitoring": ["<2개>"]
-      }
-    },
-    "income_statement": {
-      "headline": "<매출성장·수익성·비용구조 핵심 테마. 80자 이내>",
-      "message": "<1~2문장. 구체적 수치 포함>",
-      "insight": {
-        "conclusion": "<1~2문장>",
-        "evidence": ["<2~3개>"],
-        "reasoning": "<1~2문장>",
-        "accounting": ["<2개: 비용구조·운영레버리지>"],
-        "mna": ["<2개: EBITDA 배수·BEP>"],
-        "monitoring": ["<2개>"]
-      }
-    },
-    "cash_flow": {
-      "headline": "<OCF/FCF·런웨이·CAPEX 핵심 테마. 80자 이내>",
-      "message": "<1~2문장. 구체적 수치 포함>",
-      "insight": {
-        "conclusion": "<1~2문장>",
-        "evidence": ["<2~3개>"],
-        "reasoning": "<1~2문장>",
-        "accounting": ["<2개: 운전자본·CAPEX 무형자본화>"],
-        "mna": ["<2개: 외부자금 의존도·누적 FCF>"],
-        "monitoring": ["<2개>"]
-      }
-    }
-  }
-}
-
-판단 기준:
-- top_verdict.signal: 5개 카테고리 신호 종합. 자본잠식 한번이라도 있으면 최소 yellow.
-- categories[].signal: 자본잠식·이자보상 음수 같은 critical 항목은 yellow/red 강제.
-- actions: "검토 필요" 같은 막연한 표현 금지. 구체적 스텝만.
-- 각 페이지 insight는 해당 재무제표 관점에 집중. 대시보드와 중복 최소화.
-- 길이 엄수: 각 문자열 필드는 지정 범위 내로. 초과 금지.`;
-
 export const SECTION_PROMPTS = {
-  main_verdict: PROMPT_MAIN_VERDICT,
-  page_insights: PROMPT_PAGE_INSIGHTS,
-  all_in_one: PROMPT_ALL_IN_ONE,
-  top_verdict_and_categories: PROMPT_TOP_VERDICT_AND_CATEGORIES,
-  dashboard_insight: PROMPT_DASHBOARD_INSIGHT,
+  dashboard_full: PROMPT_DASHBOARD_FULL,
   bs_insight: PROMPT_BS_INSIGHT,
   is_insight: PROMPT_IS_INSIGHT,
   cf_insight: PROMPT_CF_INSIGHT,
-  item_notes_income: PROMPT_ITEM_NOTES_INCOME,
-  item_notes_balance: PROMPT_ITEM_NOTES_BALANCE,
 } as const;
 
 export type SectionKey = keyof typeof SECTION_PROMPTS;

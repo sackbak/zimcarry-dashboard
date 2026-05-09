@@ -2,56 +2,115 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { generateMain, generateInsights } from "@/app/actions";
+import {
+  generateDashboard,
+  generateBSAnalysis,
+  generateISAnalysis,
+  generateCFAnalysis,
+} from "@/app/actions";
 
-type Stage = "idle" | "stage1" | "stage2" | "done" | "error";
+type Tab = "dashboard" | "balance_sheet" | "income_statement" | "cash_flow";
 
-const STAGE_LABEL: Record<Stage, string> = {
-  idle: "AI 분석 생성하기",
-  stage1: "1단계 — 종합 진단 · 카테고리 생성 중...",
-  stage2: "2단계 — 탭별 심층 인사이트 작성 중...",
-  done: "완료",
-  error: "다시 시도",
+const ACTIONS: Record<Tab, (id: string) => Promise<{ ok: boolean; error?: string }>> = {
+  dashboard: generateDashboard,
+  balance_sheet: generateBSAnalysis,
+  income_statement: generateISAnalysis,
+  cash_flow: generateCFAnalysis,
 };
 
-export function GenerateNarrativeButton({ id }: { id: string }) {
+const LABELS: Record<Tab, { idle: string; busy: string; cost: string; expected: number }> = {
+  dashboard: {
+    idle: "AI 종합진단 생성",
+    busy: "종합진단 생성 중",
+    cost: "약 3원 · 15-25초",
+    expected: 22,
+  },
+  balance_sheet: {
+    idle: "AI 재무상태표 인사이트 생성",
+    busy: "BS 인사이트 생성 중",
+    cost: "약 2원 · 10-15초",
+    expected: 13,
+  },
+  income_statement: {
+    idle: "AI 손익계산서 인사이트 생성",
+    busy: "IS 인사이트 생성 중",
+    cost: "약 2원 · 10-15초",
+    expected: 13,
+  },
+  cash_flow: {
+    idle: "AI 현금흐름 인사이트 생성",
+    busy: "CF 인사이트 생성 중",
+    cost: "약 2원 · 10-15초",
+    expected: 13,
+  },
+};
+
+export function AIGenerateButton({
+  id,
+  tab,
+  variant = "amber",
+}: {
+  id: string;
+  tab: Tab;
+  variant?: "amber" | "compact";
+}) {
   const router = useRouter();
-  const [stage, setStage] = useState<Stage>("idle");
+  const [busy, setBusy] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const busy = stage === "stage1" || stage === "stage2";
+  const meta = LABELS[tab];
 
   async function handleClick() {
     if (busy) return;
     setErrorMsg("");
     setElapsed(0);
+    setBusy(true);
 
     const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
 
     try {
-      setStage("stage1");
-      const r1 = await generateMain(id);
-      if (!r1.ok) { setErrorMsg(r1.error ?? "1단계 실패"); setStage("error"); return; }
-
-      router.refresh();
-
-      setStage("stage2");
-      const r2 = await generateInsights(id);
-      if (!r2.ok) { setErrorMsg(r2.error ?? "2단계 실패"); setStage("error"); return; }
-
-      router.refresh();
-      setStage("done");
+      const result = await ACTIONS[tab](id);
+      if (!result.ok) {
+        setErrorMsg(result.error ?? "생성 실패");
+      } else {
+        router.refresh();
+      }
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : String(e));
     } finally {
       clearInterval(timer);
+      setBusy(false);
     }
   }
 
-  const pct = stage === "stage1"
-    ? Math.min(45, (elapsed / 25) * 45)
-    : stage === "stage2"
-      ? 45 + Math.min(50, (elapsed / 30) * 50)
-      : stage === "done" ? 100 : 0;
+  const pct = busy ? Math.min(95, (elapsed / meta.expected) * 100) : 0;
+
+  if (variant === "compact") {
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={busy}
+          className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 shadow-sm transition-colors enabled:hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {busy ? (
+            <>
+              <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-amber-700 border-t-transparent" />
+              <span>{elapsed}초 / 약 {meta.expected}초</span>
+            </>
+          ) : (
+            <>
+              <span>{meta.idle}</span>
+              <span className="text-[10px] font-normal text-amber-700">· {meta.cost}</span>
+            </>
+          )}
+        </button>
+        {errorMsg && <p className="max-w-[280px] text-right text-[11px] text-red-600">{errorMsg}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-end gap-1.5">
@@ -64,11 +123,15 @@ export function GenerateNarrativeButton({ id }: { id: string }) {
         {busy ? (
           <span className="inline-flex items-center gap-2">
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-amber-700 border-t-transparent" />
-            {elapsed}초
+            {elapsed}초 / 약 {meta.expected}초
           </span>
-        ) : STAGE_LABEL[stage]}
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            {meta.idle}
+            <span className="text-[10px] font-normal text-amber-700">{meta.cost}</span>
+          </span>
+        )}
       </button>
-
       {busy && (
         <div className="w-56 space-y-1">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-100">
@@ -77,13 +140,15 @@ export function GenerateNarrativeButton({ id }: { id: string }) {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="text-right text-[11px] text-amber-700">{STAGE_LABEL[stage]}</div>
+          <div className="text-right text-[11px] text-amber-700">{meta.busy}...</div>
         </div>
       )}
-
-      {stage === "error" && errorMsg && (
-        <p className="max-w-[200px] text-right text-[11px] text-red-600">{errorMsg}</p>
-      )}
+      {errorMsg && <p className="max-w-[280px] text-right text-[11px] text-red-600">{errorMsg}</p>}
     </div>
   );
+}
+
+/** 기존 import 호환 — 대시보드 버튼 alias */
+export function GenerateNarrativeButton({ id }: { id: string }) {
+  return <AIGenerateButton id={id} tab="dashboard" />;
 }

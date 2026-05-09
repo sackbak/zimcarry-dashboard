@@ -1,10 +1,12 @@
 /**
- * 회사 narrative 생성 — 클라이언트 2단계 호출용.
+ * Per-tab narrative 생성 — 4개 독립 함수.
  *
- * generateMainOnly  → 1단계: top_verdict + categories (~15-25s)
- * generateInsightsOnly → 2단계: 4개 탭 insight (~20-30s)
+ *   generateDashboardFull → top_verdict + categories + dashboard insight (~15-20s, ~3원)
+ *   generateBSInsight → 재무상태표 PageNarrative (~10-15s, ~2원)
+ *   generateISInsight → 손익계산서 PageNarrative (~10-15s, ~2원)
+ *   generateCFInsight → 현금흐름 PageNarrative (~10-15s, ~2원)
  *
- * 각각 독립적인 Vercel 60초 타임아웃 안에서 실행.
+ * 각 호출은 독립적으로 60초 안에 끝남 — 절대 타임아웃 없음.
  */
 
 import { generateSection } from "@/lib/llm/client";
@@ -16,42 +18,44 @@ import type {
   PageNarrative,
 } from "@/types/CompanyAnalysis";
 
-export type NarrativeUsage = {
-  total_input_tokens: number;
-  total_output_tokens: number;
-  estimated_cost_usd: number;
-};
-
-type MainResult = { top_verdict: TopVerdict; categories: CategoryNarrative[] };
-type PagesResult = {
+export type DashboardFullResult = {
+  top_verdict: TopVerdict;
+  categories: CategoryNarrative[];
   dashboard: PageNarrative;
-  balance_sheet: PageNarrative;
-  income_statement: PageNarrative;
-  cash_flow: PageNarrative;
 };
 
-export async function generateMainOnly(
+export async function generateDashboardFull(
   raw: RawCompanyData,
   computed: ComputedMetrics,
   verbose = false
-): Promise<{ result: MainResult; usage: NarrativeUsage }> {
-  const r = await generateSection<MainResult>("main_verdict", raw, computed, { verbose });
-  const cost = (r.usage.input_tokens * 0.3 + r.usage.output_tokens * 2.5) / 1_000_000;
-  return {
-    result: r.data,
-    usage: { total_input_tokens: r.usage.input_tokens, total_output_tokens: r.usage.output_tokens, estimated_cost_usd: cost },
-  };
+): Promise<DashboardFullResult> {
+  const r = await generateSection<DashboardFullResult>("dashboard_full", raw, computed, { verbose });
+  return r.data;
 }
 
-export async function generateInsightsOnly(
+export async function generateBSInsight(
   raw: RawCompanyData,
   computed: ComputedMetrics,
   verbose = false
-): Promise<{ result: PagesResult; usage: NarrativeUsage }> {
-  const r = await generateSection<PagesResult>("page_insights", raw, computed, { verbose });
-  const cost = (r.usage.input_tokens * 0.3 + r.usage.output_tokens * 2.5) / 1_000_000;
-  return {
-    result: r.data,
-    usage: { total_input_tokens: r.usage.input_tokens, total_output_tokens: r.usage.output_tokens, estimated_cost_usd: cost },
-  };
+): Promise<PageNarrative> {
+  const r = await generateSection<PageNarrative>("bs_insight", raw, computed, { verbose });
+  return r.data;
+}
+
+export async function generateISInsight(
+  raw: RawCompanyData,
+  computed: ComputedMetrics,
+  verbose = false
+): Promise<PageNarrative> {
+  const r = await generateSection<PageNarrative>("is_insight", raw, computed, { verbose });
+  return r.data;
+}
+
+export async function generateCFInsight(
+  raw: RawCompanyData,
+  computed: ComputedMetrics,
+  verbose = false
+): Promise<PageNarrative> {
+  const r = await generateSection<PageNarrative>("cf_insight", raw, computed, { verbose });
+  return r.data;
 }

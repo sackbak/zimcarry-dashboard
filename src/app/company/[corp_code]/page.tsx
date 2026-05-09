@@ -19,7 +19,7 @@ import {
 import { HeadVerdict } from "@/components/HeadVerdict";
 import { TrendChart } from "@/components/TrendChart";
 import { RichText } from "@/components/RichText";
-import { GenerateNarrativeButton } from "@/components/GenerateNarrativeButton";
+import { AIGenerateButton } from "@/components/GenerateNarrativeButton";
 import {
   DashboardKpiCard,
   type KpiSeriesKind,
@@ -85,7 +85,7 @@ export default async function CompanyDashboard({
         </div>
       )}
 
-      {narrative ? (
+      {narrative?.top_verdict && narrative.categories && narrative.pages?.dashboard ? (
         <>
           {/* ── AI 분석 활성 — 전체 너비 다크 히어로 섹션 ── */}
           <div className="-mx-4 md:-mx-8 bg-gray-950">
@@ -127,10 +127,10 @@ export default async function CompanyDashboard({
                   topic="종합"
                   status={narrative.top_verdict.label.replace(/^[^\s]+\s/, "")}
                   signal={narrative.top_verdict.signal}
-                  headline={narrative.partial ? narrative.top_verdict.summary.split('. ')[0] : narrative.pages.dashboard.headline}
-                  message={narrative.partial ? narrative.top_verdict.summary : narrative.pages.dashboard.message}
+                  headline={narrative.pages.dashboard.headline}
+                  message={narrative.pages.dashboard.message}
                   asOfNote={`${years.length}개년 (${raw.meta.data_period ?? years[0] + "~" + lastYear})`}
-                  insight={narrative.partial ? undefined : narrative.pages.dashboard.insight}
+                  insight={narrative.pages.dashboard.insight}
                   dark
                 />
               </div>
@@ -326,16 +326,17 @@ function LiteHeader({
             Lite mode
           </span>
           <p className="text-sm leading-relaxed text-gray-800">
-            지금은 신호등·차트·KPI만 표시됩니다. AI 분석을 실행하면
-            종합 진단·5대 카테고리 코멘트·시나리오·탭별 심층 인사이트가 추가됩니다.
+            지금은 신호등·차트·KPI만 표시됩니다. AI 종합진단을 누르면
+            top verdict + 5카테고리 + 대시보드 심층 분석이 한 번에 생성됩니다.
+            각 탭(BS/IS/CF) 인사이트는 해당 탭에서 따로 생성할 수 있습니다.
           </p>
           <p className="text-[11px] text-gray-500">
-            Gemini 2.5 Flash 유료 API · 2단계 순차 생성 · 약 35~45초 소요 ·
-            회사당 약 10원 · {years.length}개년 ({years[0]}~{years.at(-1)}) ·{" "}
+            Gemini 2.5 Flash 유료 API · 단일 호출 · 약 15~25초 소요 ·
+            대시보드 약 3원 · {years.length}개년 ({years[0]}~{years.at(-1)}) ·{" "}
             {reportDate} 기준 · <span className="font-mono">{corpCode}</span>
           </p>
         </div>
-        <GenerateNarrativeButton id={corpCode} />
+        <AIGenerateButton id={corpCode} tab="dashboard" />
       </div>
     </div>
   );

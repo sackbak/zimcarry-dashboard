@@ -23,7 +23,7 @@ export async function generateMetadata({
     return {
       title: `${a.raw.meta.company_name} 재무 대시보드`,
       description:
-        a.narrative?.top_verdict.summary.slice(0, 160) ??
+        a.narrative?.top_verdict?.summary.slice(0, 160) ??
         `${a.raw.meta.company_name} 5개년 재무 분석 — DART 기반.`,
     };
   } catch {

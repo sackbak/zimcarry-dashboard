@@ -252,17 +252,21 @@ export interface TopVerdict {
   actions?: string[];                        // 3-5개 구체적 다음 스텝 (M&A/투자 담당자용)
 }
 
+/**
+ * Per-tab 독립 생성 모델 — 각 섹션이 optional.
+ *   top_verdict + categories + pages.dashboard: "AI 종합진단" 버튼으로 동시 생성
+ *   pages.balance_sheet/income_statement/cash_flow: 각 탭에서 따로 생성
+ *   item_notes: 사용 안 함
+ */
 export interface CompanyNarrative {
-  top_verdict: TopVerdict;
-  pages: {
-    dashboard: PageNarrative;
-    balance_sheet: PageNarrative;
-    income_statement: PageNarrative;
-    cash_flow: PageNarrative;
+  top_verdict?: TopVerdict;
+  categories?: CategoryNarrative[];
+  pages?: {
+    dashboard?: PageNarrative;
+    balance_sheet?: PageNarrative;
+    income_statement?: PageNarrative;
+    cash_flow?: PageNarrative;
   };
-  categories: CategoryNarrative[];
-  /** 1단계만 완료 — 탭 insight 아직 생성 중 */
-  partial?: boolean;
   item_notes?: {
     income: Record<string, ItemNote>;
     balance: Record<string, ItemNote>;

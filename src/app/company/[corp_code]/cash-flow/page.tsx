@@ -14,7 +14,8 @@ import { cashflowSections } from "@/lib/financial-sections";
 import { ItemTableSection } from "@/components/ItemTableSection";
 import { TrendChart } from "@/components/TrendChart";
 import { HeadVerdict } from "@/components/HeadVerdict";
-import { fmtEok, fmtPct } from "@/lib/format";
+import { AIGenerateButton } from "@/components/GenerateNarrativeButton";
+import { fmtEok } from "@/lib/format";
 
 export const dynamicParams = true;
 export const revalidate = 86400;
@@ -48,7 +49,7 @@ export default async function CashFlowPage({
   const financing = cf?.financing ?? [];
   const fcfSeries = dcf?.fcf ?? [];
 
-  const cashCat = narrative?.categories.find((c) => c.name === "현금흐름");
+  const cashCat = narrative?.categories?.find((c) => c.name === "현금흐름");
   const fcf = fcfSeries[lastIdx];
   const runway = dcf?.runway_months?.[lastIdx];
   const interestCov = dcf?.interest_coverage?.[lastIdx];
@@ -64,11 +65,11 @@ export default async function CashFlowPage({
         </h1>
       </header>
 
-      {narrative && cashCat ? (
+      {narrative?.pages?.cash_flow ? (
         <HeadVerdict
           topic="현금흐름"
-          status={cashCat.summary.replace(/^[^\s]+\s/, "")}
-          signal={cashCat.signal}
+          status={cashCat?.summary.replace(/^[^\s]+\s/, "") ?? "AI 분석"}
+          signal={cashCat?.signal ?? "yellow"}
           headline={narrative.pages.cash_flow.headline}
           message={narrative.pages.cash_flow.message}
           asOfNote={`${raw.meta.report_date} 기준 / ${years[lastIdx]} 결산`}
@@ -96,15 +97,23 @@ export default async function CashFlowPage({
         />
       ) : (
         <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5">
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-800">
-            ⚡ Lite mode
-          </span>
-          <p className="mt-2 text-sm text-gray-800">
-            FCF <b>{fmtEok(fcf, { sign: true })}</b> · Runway{" "}
-            <b>{runway != null ? `${runway.toFixed(1)}개월` : "-"}</b> ·
-            이자보상 <b>{interestCov != null ? `${interestCov.toFixed(2)}x` : "-"}</b>{" "}
-            <span className="text-gray-500">({years[lastIdx]} 결산)</span>
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                Lite mode
+              </span>
+              <p className="text-sm text-gray-800">
+                FCF <b>{fmtEok(fcf, { sign: true })}</b> · Runway{" "}
+                <b>{runway != null ? `${runway.toFixed(1)}개월` : "-"}</b> ·
+                이자보상 <b>{interestCov != null ? `${interestCov.toFixed(2)}x` : "-"}</b>{" "}
+                <span className="text-gray-500">({years[lastIdx]} 결산)</span>
+              </p>
+              <p className="text-[11px] text-gray-500">
+                AI 인사이트를 생성하면 OCF/FCF 자력생존·런웨이·CAPEX 성격·외부자금 의존도를 다룬 심층 분석이 추가됩니다.
+              </p>
+            </div>
+            <AIGenerateButton id={corp_code} tab="cash_flow" variant="compact" />
+          </div>
         </div>
       )}
 
