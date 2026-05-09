@@ -209,7 +209,26 @@ function sanitizeMarkup<T>(value: T): T {
 }
 
 /**
+ * LLM이 자주 내는 JSON 오류를 자동 복구.
+ *   - trailing comma: }, ] 직전의 , 제거
+ *   - 배열 안 인접 string 사이 콤마 누락: "abc"\n  "def" → "abc",\n  "def"
+ *   - 객체 안 인접 key-value 사이 콤마 누락: "k1": "v1"\n  "k2" → "k1": "v1",\n  "k2"
+ */
+function repairJson(s: string): string {
+  let out = s;
+  // 1. trailing comma 제거 (가장 흔함)
+  out = out.replace(/,(\s*[\]}])/g, "$1");
+  // 2. 배열·객체 안 인접 요소 사이 누락된 콤마 보정
+  //    string + 줄바꿈 + (string|"key":) 패턴
+  out = out.replace(/("(?:[^"\\]|\\.)*")(\s*\n\s*)(["{[])/g, "$1,$2$3");
+  //    } 또는 ] 다음 줄바꿈 + (string|"key":|{|[) 패턴
+  out = out.replace(/([}\]])(\s*\n\s*)(["{[])/g, "$1,$2$3");
+  return out;
+}
+
+/**
  * LLM 응답에서 JSON 추출 + parse + 마크업 정리.
+ * 파싱 실패 시 흔한 오류 자동 복구 후 재시도.
  */
 function parseJsonResponse<T>(text: string, section: string): T {
   let cleaned = text.trim();
@@ -222,12 +241,21 @@ function parseJsonResponse<T>(text: string, section: string): T {
       cleaned = cleaned.slice(firstBrace, lastBrace + 1);
     }
   }
+  // 1차 시도
   try {
     const parsed = JSON.parse(cleaned) as T;
     return sanitizeMarkup(parsed);
-  } catch (e) {
-    throw new Error(
-      `[${section}] JSON parse 실패: ${(e as Error).message}\n--- raw ---\n${text.slice(0, 500)}`
-    );
+  } catch (e1) {
+    // 2차 시도: 자동 복구 후 재파싱
+    try {
+      const repaired = repairJson(cleaned);
+      const parsed = JSON.parse(repaired) as T;
+      return sanitizeMarkup(parsed);
+    } catch {
+      // 복구 실패 — 원본 에러 메시지로 throw
+      throw new Error(
+        `[${section}] JSON parse 실패: ${(e1 as Error).message}\n--- raw ---\n${text.slice(0, 500)}`
+      );
+    }
   }
 }

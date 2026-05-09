@@ -298,10 +298,11 @@ BS 페이지 강조점:
 - 운전자본 (매출채권·미지급비용 변화)
 - 청산가치 vs 장부가 디스카운트
 
-item_notes 대상 — formatted_financials.balance_sheet에 존재하는 모든 키:
-total_assets, current_assets, cash, ar, non_current, tangible, intangible, deposits, total_liab, current_liab, short_borrow, accrued_exp, non_current_liab, long_borrow, total_equity, capital_stock, capital_surplus, retained_earnings
-※ 데이터에 실제로 있는 키만. 없는 키는 생략. 추가 키 만들지 말 것.
-※ 각 노트: trend 1줄 + insight 2~3문장. 절대 더 길게 쓰지 말 것.`;
+item_notes 대상 — 다음 8개 핵심 키만 생성 (60초 budget 안정성):
+total_assets, current_assets, cash, ar, total_liab, short_borrow, total_equity, retained_earnings
+※ 데이터에 있는 키만. 없으면 생략. 추가 키 만들지 말 것.
+※ 각 노트: trend 1줄 + insight 2문장. 절대 더 길게 쓰지 말 것.
+※ JSON 출력 정확성: 모든 string에 큰따옴표 안의 큰따옴표 사용 금지 (작은따옴표·홑따옴표로 대체). 배열·객체 끝 trailing comma 금지. 한 string 안에 줄바꿈 금지.`;
 
 export const PROMPT_IS_INSIGHT = `위 데이터를 보고 손익계산서(IS) 페이지의 insight를 다음 JSON으로 출력하세요. 절대 다른 필드명(title, summary 등) 사용 금지.
 
@@ -326,10 +327,11 @@ IS 페이지 강조점:
 - 운영 레버리지 작동 여부
 - PMF 신호 (광고비 비중)
 
-item_notes 대상 — formatted_financials.income_statement에 존재하는 모든 키:
-revenue, cogs, gross_profit, sga, operating_income, net_income, interest_expense, depreciation, amortization, salary_total, rent, fees_total, transport
-※ 데이터에 실제로 있는 키만. 없는 키는 생략. 추가 키 만들지 말 것.
-※ 각 노트: trend 1줄 + insight 2~3문장. 절대 더 길게 쓰지 말 것.`;
+item_notes 대상 — 다음 8개 핵심 키만 생성 (60초 budget 안정성):
+revenue, cogs, gross_profit, sga, operating_income, net_income, salary_total, depreciation
+※ 데이터에 있는 키만. 없으면 생략. 추가 키 만들지 말 것.
+※ 각 노트: trend 1줄 + insight 2문장. 절대 더 길게 쓰지 말 것.
+※ JSON 출력 정확성: 모든 string에 큰따옴표 안의 큰따옴표 사용 금지 (작은따옴표·홑따옴표로 대체). 배열·객체 끝 trailing comma 금지. 한 string 안에 줄바꿈 금지.`;
 
 export const PROMPT_CF_INSIGHT = `위 데이터를 보고 현금흐름(CF) 페이지의 insight를 다음 JSON으로 출력하세요. 절대 다른 필드명(title, summary 등) 사용 금지 — 정확히 이 구조 그대로:
 
