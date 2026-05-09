@@ -189,16 +189,6 @@ export function KPICard({
                 <div className="mt-0.5 text-sm text-gray-700">{entry.bad}</div>
               </div>
             )}
-            {entry?.zimcarry && (
-              <div className="rounded-md border-l-4 border-l-amber-400 bg-amber-50/30 px-3 py-2">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">
-                  짐캐리 적용
-                </div>
-                <div className="mt-0.5 text-sm leading-relaxed text-gray-700">
-                  {entry.zimcarry}
-                </div>
-              </div>
-            )}
           </div>
         </Modal>
       )}

@@ -93,7 +93,7 @@ export default async function OG() {
             letterSpacing: -1,
           }}
         >
-          짐캐리 재무 대시보드
+          한국 상장사 재무 대시보드
         </div>
 
         <div

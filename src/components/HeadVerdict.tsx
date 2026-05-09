@@ -213,7 +213,7 @@ function VerdictKpiModal({
       <div className="space-y-4 p-6 pt-7">
         <header className="pr-8">
           <div className="text-[10px] font-medium uppercase tracking-wider text-blue-500">
-            지표 정의 · 2025 짐캐리 값
+            지표 정의
           </div>
           <h3 className="mt-1 flex items-baseline gap-2 text-xl font-bold text-gray-900">
             {entry.term}
@@ -276,16 +276,6 @@ function VerdictKpiModal({
           </div>
         )}
 
-        {entry.zimcarry && (
-          <div className="rounded-md border-l-4 border-l-amber-400 bg-amber-50/30 px-3 py-2">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">
-              짐캐리 적용
-            </div>
-            <div className="mt-0.5 text-sm leading-relaxed text-gray-700">
-              {entry.zimcarry}
-            </div>
-          </div>
-        )}
       </div>
     </Modal>
   );

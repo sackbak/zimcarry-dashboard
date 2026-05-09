@@ -340,16 +340,6 @@ function RoundDetail({
         />
       </div>
 
-      {entry?.zimcarry && (
-        <div className="rounded-lg border-l-4 border-l-amber-400 bg-amber-50/30 px-3 py-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-amber-700">
-            짐캐리 적용
-          </div>
-          <p className="mt-1 text-[12px] leading-relaxed text-gray-700">
-            {entry.zimcarry}
-          </p>
-        </div>
-      )}
 
       <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-[11px] leading-relaxed text-gray-600">
         <span className="font-semibold text-gray-700">참고</span> · 본 모달은 VC 직접 투자분만 표시 (누적 VC {fmtEok(vcOnlyMil)}). 재무제표상 누적 자본금에는 정책자금 + 창업자 출자가 추가로 포함됨.

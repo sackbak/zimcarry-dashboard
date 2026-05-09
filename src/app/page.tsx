@@ -63,7 +63,7 @@ export default async function HomePage({
           </h1>
           <p className="text-sm leading-relaxed text-gray-600 md:text-base">
             DART corp_code를 입력하면 5개년 재무제표 → 14개 비율 → 신호등
-            평가까지 자동 생성. 차트·KPI·라인아이템 그대로 짐캐리 프레임으로.
+            평가까지 자동 생성. AI 분석은 탭별로 따로 생성 가능.
           </p>
         </header>
 

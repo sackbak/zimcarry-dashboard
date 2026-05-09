@@ -150,21 +150,21 @@ function PrimaryButton({
   meta: (typeof META)[Tab];
 }) {
   return (
-    <div className="flex flex-col items-end gap-1.5">
+    <div className="flex shrink-0 flex-col items-end gap-1.5">
       <button
         type="submit"
         disabled={pending}
-        className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg border border-indigo-300 bg-gradient-to-r from-indigo-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-all enabled:hover:shadow-md enabled:hover:shadow-indigo-300 enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+        className="group relative inline-flex shrink-0 items-center gap-2 overflow-hidden whitespace-nowrap rounded-lg border border-indigo-300 bg-gradient-to-r from-indigo-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-all enabled:hover:shadow-md enabled:hover:shadow-indigo-300 enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
       >
         {!pending && (
-          <span className="relative inline-flex h-2 w-2">
+          <span className="relative inline-flex h-2 w-2 shrink-0">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
           </span>
         )}
-        <span>{pending ? `${elapsed}초 / 약 ${meta.expected}초` : meta.idle}</span>
+        <span className="whitespace-nowrap">{pending ? `${elapsed}초 / 약 ${meta.expected}초` : meta.idle}</span>
       </button>
-      <div className="text-[11px] text-gray-500">{meta.cost}</div>
+      <div className="whitespace-nowrap text-[11px] text-gray-500">{meta.cost}</div>
     </div>
   );
 }
@@ -182,16 +182,16 @@ function CompactButton({
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all enabled:hover:border-indigo-400 enabled:hover:from-indigo-100 enabled:hover:to-blue-100 enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+      className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all enabled:hover:border-indigo-400 enabled:hover:from-indigo-100 enabled:hover:to-blue-100 enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
     >
       {!pending && (
-        <span className="relative inline-flex h-1.5 w-1.5">
+        <span className="relative inline-flex h-1.5 w-1.5 shrink-0">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-500 opacity-60" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
         </span>
       )}
-      <span>{pending ? `분석 중 ${elapsed}s / ${meta.expected}s` : meta.idle}</span>
-      {!pending && <span className="text-[10px] font-normal text-indigo-500">{meta.cost}</span>}
+      <span className="whitespace-nowrap">{pending ? `분석 중 ${elapsed}s / ${meta.expected}s` : meta.idle}</span>
+      {!pending && <span className="whitespace-nowrap text-[10px] font-normal text-indigo-500">{meta.cost}</span>}
     </button>
   );
 }

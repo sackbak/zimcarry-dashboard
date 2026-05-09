@@ -33,9 +33,6 @@ export function GlossaryRowTrigger({ entry }: { entry: GlossaryEntry }) {
         <td className="px-4 py-2.5 align-top text-[12px] text-gray-700">
           {entry.short}
         </td>
-        <td className="px-4 py-2.5 align-top text-[12px] text-gray-600">
-          {entry.zimcarry ?? "—"}
-        </td>
       </tr>
 
       <Modal open={open} onClose={() => setOpen(false)} className="max-w-xl">
@@ -76,13 +73,6 @@ export function GlossaryRowTrigger({ entry }: { entry: GlossaryEntry }) {
             </div>
           )}
 
-          {entry.zimcarry && (
-            <Field label="짐캐리 적용" tone="amber">
-              <span className="block text-sm leading-relaxed text-gray-700">
-                {entry.zimcarry}
-              </span>
-            </Field>
-          )}
         </div>
       </Modal>
     </>

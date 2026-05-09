@@ -133,13 +133,6 @@ export function Term({
             </div>
           )}
 
-          {entry.zimcarry && (
-            <Field label="짐캐리 적용" tone="amber">
-              <span className="block text-sm leading-relaxed text-gray-700">
-                {entry.zimcarry}
-              </span>
-            </Field>
-          )}
         </div>
       </Modal>
     </>
