@@ -65,3 +65,87 @@ html {
 .ai-reveal-delay-1 { animation-delay: 0.05s; }
 .ai-reveal-delay-2 { animation-delay: 0.12s; }
 .ai-reveal-delay-3 { animation-delay: 0.2s; }
+.ai-reveal-delay-4 { animation-delay: 0.28s; }
+
+/* AI 활성 섹션 — 라이트 프리미엄 배경 */
+.ai-active-bg {
+  background:
+    radial-gradient(ellipse at top right, rgba(99, 102, 241, 0.07), transparent 60%),
+    radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.05), transparent 50%),
+    linear-gradient(to bottom, #fafbff 0%, #ffffff 100%);
+  border-top: 1px solid rgba(99, 102, 241, 0.18);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.10);
+}
+
+/* AI 분석 진행 중 — 스캔 라인 애니메이션 */
+@keyframes scan-line {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.scan-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.4) 30%,
+    rgba(99, 102, 241, 0.9) 50%,
+    rgba(99, 102, 241, 0.4) 70%,
+    transparent 100%
+  );
+  box-shadow: 0 0 24px 3px rgba(99, 102, 241, 0.5);
+  animation: scan-line 2.2s ease-in-out infinite;
+}
+
+/* shimmer 효과 — 분석 중 카드용 */
+@keyframes shimmer {
+  0% { background-position: -800px 0; }
+  100% { background-position: 800px 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(243, 244, 246, 0.6) 0%,
+    rgba(224, 231, 255, 0.9) 40%,
+    rgba(243, 244, 246, 0.6) 80%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* AI 분석 활성 배지 — 글로우 펄스 */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* 숫자 카운트업 효과 */
+@keyframes number-rise {
+  from { opacity: 0; transform: translateY(8px); filter: blur(2px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+.number-rise {
+  animation: number-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

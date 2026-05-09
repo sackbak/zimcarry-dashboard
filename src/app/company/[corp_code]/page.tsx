@@ -87,42 +87,42 @@ export default async function CompanyDashboard({
 
       {narrative?.top_verdict && narrative.categories && narrative.pages?.dashboard ? (
         <>
-          {/* ── AI 분석 활성 — 전체 너비 다크 히어로 섹션 ── */}
-          <div className="-mx-4 md:-mx-8 bg-gray-950">
+          {/* ── AI 분석 활성 — 라이트 프리미엄 히어로 ── */}
+          <div className="-mx-4 md:-mx-8 ai-active-bg">
             <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-8 md:px-8 md:py-10">
 
-              {/* 헤더 (다크 배경 위) */}
-              <div className="flex items-start justify-between gap-4">
+              {/* 헤더 */}
+              <div className="ai-reveal flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[11px] font-medium uppercase tracking-wider text-gray-500">
+                  <div className="text-[11px] font-medium uppercase tracking-wider text-indigo-600">
                     Overview · {raw.meta.data_period} ({years.length}개년)
                   </div>
-                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-white md:text-3xl">
+                  <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
                     {raw.meta.company_name} 재무 대시보드
                   </h1>
                   {raw.company.industry && (
-                    <div className="mt-1 text-sm text-gray-400">
+                    <div className="mt-1 text-sm text-gray-500">
                       {raw.company.industry}
                       {raw.company.is_listed && " · 상장사"}
                     </div>
                   )}
                 </div>
                 <div className="shrink-0 pt-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
+                  <span className="glow-pulse inline-flex items-center gap-1.5 rounded-full border border-indigo-300 bg-gradient-to-r from-indigo-50 to-blue-50 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-indigo-700">
                     <span className="relative flex h-1.5 w-1.5">
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                      <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-500 opacity-75" />
+                      <span className="relative h-1.5 w-1.5 rounded-full bg-indigo-500" />
                     </span>
-                    AI 정밀 분석 · 유료
+                    AI 정밀 분석 활성 · 유료
                   </span>
-                  <div className="mt-1 text-right text-[11px] text-gray-600">
-                    {raw.meta.report_date} 기준
+                  <div className="mt-1 text-right text-[11px] text-gray-500">
+                    {raw.meta.report_date} 기준 · Gemini 2.5 Flash
                   </div>
                 </div>
               </div>
 
               {/* 종합 진단 */}
-              <div className="ai-reveal">
+              <div className="ai-reveal ai-reveal-delay-1">
                 <HeadVerdict
                   topic="종합"
                   status={narrative.top_verdict.label.replace(/^[^\s]+\s/, "")}
@@ -131,25 +131,23 @@ export default async function CompanyDashboard({
                   message={narrative.pages.dashboard.message}
                   asOfNote={`${years.length}개년 (${raw.meta.data_period ?? years[0] + "~" + lastYear})`}
                   insight={narrative.pages.dashboard.insight}
-                  dark
                 />
               </div>
 
               {/* 5대 카테고리 */}
-              <div className="ai-reveal ai-reveal-delay-1 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
+              <div className="ai-reveal ai-reveal-delay-2 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
                 {narrative.categories.map((c) => (
                   <CategoryDetailCard
                     key={c.name}
                     category={{ name: c.name, signal: c.signal, summary: c.summary, comment: c.comment }}
                     computed={computed}
                     isLite={false}
-                    dark
                   />
                 ))}
               </div>
 
               {/* 시나리오 + 액션 */}
-              <div className="ai-reveal ai-reveal-delay-2">
+              <div className="ai-reveal ai-reveal-delay-3">
                 <ScenariosCard verdict={narrative.top_verdict} />
               </div>
 
@@ -345,23 +343,23 @@ function LiteHeader({
 function ScenariosCard({ verdict }: { verdict: TopVerdict }) {
   const sig = verdict.signal as Signal;
   return (
-    <div className="overflow-hidden rounded-xl border border-white/10 bg-gray-950 shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm shadow-indigo-100/50">
       <div className={cn("h-1 w-full", SIGNAL_BAR[sig])} />
       <div className="flex flex-col gap-5 p-6">
         <div className="space-y-1">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-white/40">
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600">
             종합 진단
           </div>
-          <p className="text-sm leading-relaxed text-white/80">
+          <p className="text-sm leading-relaxed text-gray-800">
             <RichText text={verdict.summary} />
           </p>
         </div>
         {verdict.key_question && (
-          <div className="rounded-lg border-l-4 border-l-blue-500 bg-blue-500/10 px-4 py-3">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-400">
+          <div className="rounded-lg border-l-4 border-l-indigo-500 bg-gradient-to-r from-indigo-50 to-blue-50/50 px-4 py-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">
               핵심 질문
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-white/80">
+            <p className="mt-1 text-sm leading-relaxed text-gray-800">
               {verdict.key_question}
             </p>
           </div>
@@ -372,14 +370,14 @@ function ScenariosCard({ verdict }: { verdict: TopVerdict }) {
           <ScenarioBlock tone="bearish" label="Bearish" text={verdict.scenarios.bearish} />
         </div>
         {verdict.actions && verdict.actions.length > 0 && (
-          <div className="space-y-2 border-t border-white/10 pt-4">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+          <div className="space-y-2 border-t border-gray-100 pt-4">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-indigo-600">
               다음 액션 · M&A / 투자 담당자
             </div>
             <ol className="space-y-2">
               {verdict.actions.map((action, i) => (
-                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-white/70">
-                  <span className="mt-0.5 shrink-0 font-mono text-[11px] font-bold text-white/30">
+                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-gray-700">
+                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-indigo-100 font-mono text-[10px] font-bold text-indigo-700">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span>{action}</span>
@@ -404,19 +402,19 @@ function ScenarioBlock({
 }) {
   const styles =
     tone === "bullish"
-      ? { border: "border-l-emerald-500", bg: "bg-emerald-500/10", dot: "bg-emerald-400", label: "text-emerald-400" }
+      ? { border: "border-l-emerald-500", bg: "bg-gradient-to-br from-emerald-50 to-white", dot: "bg-emerald-500", label: "text-emerald-700" }
       : tone === "bearish"
-        ? { border: "border-l-rose-500", bg: "bg-rose-500/10", dot: "bg-rose-400", label: "text-rose-400" }
-        : { border: "border-l-slate-500", bg: "bg-white/5", dot: "bg-slate-400", label: "text-slate-400" };
+        ? { border: "border-l-rose-500", bg: "bg-gradient-to-br from-rose-50 to-white", dot: "bg-rose-500", label: "text-rose-700" }
+        : { border: "border-l-slate-400", bg: "bg-gradient-to-br from-slate-50 to-white", dot: "bg-slate-500", label: "text-slate-700" };
   return (
-    <div className={cn("rounded-md border-l-4 px-3 py-2.5", styles.border, styles.bg)}>
+    <div className={cn("rounded-md border border-gray-100 border-l-4 px-3 py-2.5 shadow-sm", styles.border, styles.bg)}>
       <div className="mb-1 flex items-center gap-1.5">
         <span className={cn("h-1.5 w-1.5 rounded-full", styles.dot)} />
-        <div className={cn("text-[10px] font-semibold uppercase tracking-wider", styles.label)}>
+        <div className={cn("text-[10px] font-bold uppercase tracking-wider", styles.label)}>
           {label}
         </div>
       </div>
-      <p className="text-xs leading-relaxed text-white/70">{text}</p>
+      <p className="text-xs leading-relaxed text-gray-700">{text}</p>
     </div>
   );
 }
