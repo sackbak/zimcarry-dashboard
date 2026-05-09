@@ -267,12 +267,11 @@ const PAGE_NARRATIVE_SCHEMA = `{
   }
 }`;
 
-/** ITEM_NOTES 스키마 — 라인아이템 모달 안의 학습/투자 탭에 들어가는 핵심 항목별 노트 */
+/** ITEM_NOTES 스키마 — 라인아이템 모달의 인사이트 박스 (학습 + 투자 통합) */
 const ITEM_NOTES_SCHEMA = `"item_notes": {
     "<line item key>": {
       "trend": "<5년 추이 한 줄 — '11.5배 증가', '2년 연속 음수' 등. 데이터 기반>",
-      "learn_note": "<2~3문장. 이 항목이 무엇이고 왜 보는지 + 현재 회사의 이 숫자가 어떻게 읽히는지>",
-      "investment_note": "<2~3문장. 투자/M&A 관점 — 이 추이가 의미하는 구조적 함의 + 추적할 포인트>"
+      "insight": "<2~3문장 통합. (1) 이 항목이 무엇이고 (2) 이 회사 5년치 숫자에서 읽히는 핵심 변곡점·이례 패턴 (3) 투자/M&A 관점에서 추적할 포인트. 단순 수치 재진술 금지.>"
     }
   }`;
 
@@ -299,10 +298,10 @@ BS 페이지 강조점:
 - 운전자본 (매출채권·미지급비용 변화)
 - 청산가치 vs 장부가 디스카운트
 
-item_notes 대상 — 다음 핵심 6-7개 키만 생성 (60초 budget):
-total_assets, cash, ar, total_liab, short_borrow, total_equity, retained_earnings
-※ 데이터에 실제로 있는 키에 대해서만. 없는 키는 생략. 추가 키 만들지 말 것.
-※ 각 노트는 trend 한 줄 + learn_note 1-2문장 + investment_note 1-2문장. 절대 길게 쓰지 말 것.`;
+item_notes 대상 — formatted_financials.balance_sheet에 존재하는 모든 키:
+total_assets, current_assets, cash, ar, non_current, tangible, intangible, deposits, total_liab, current_liab, short_borrow, accrued_exp, non_current_liab, long_borrow, total_equity, capital_stock, capital_surplus, retained_earnings
+※ 데이터에 실제로 있는 키만. 없는 키는 생략. 추가 키 만들지 말 것.
+※ 각 노트: trend 1줄 + insight 2~3문장. 절대 더 길게 쓰지 말 것.`;
 
 export const PROMPT_IS_INSIGHT = `위 데이터를 보고 손익계산서(IS) 페이지의 insight를 다음 JSON으로 출력하세요. 절대 다른 필드명(title, summary 등) 사용 금지.
 
@@ -327,10 +326,10 @@ IS 페이지 강조점:
 - 운영 레버리지 작동 여부
 - PMF 신호 (광고비 비중)
 
-item_notes 대상 — 다음 핵심 6-7개 키만 생성 (60초 budget):
-revenue, cogs, sga, operating_income, net_income, salary_total
-※ 데이터에 실제로 있는 키에 대해서만. 없는 키는 생략. 추가 키 만들지 말 것.
-※ 각 노트는 trend 한 줄 + learn_note 1-2문장 + investment_note 1-2문장. 절대 길게 쓰지 말 것.`;
+item_notes 대상 — formatted_financials.income_statement에 존재하는 모든 키:
+revenue, cogs, gross_profit, sga, operating_income, net_income, interest_expense, depreciation, amortization, salary_total, rent, fees_total, transport
+※ 데이터에 실제로 있는 키만. 없는 키는 생략. 추가 키 만들지 말 것.
+※ 각 노트: trend 1줄 + insight 2~3문장. 절대 더 길게 쓰지 말 것.`;
 
 export const PROMPT_CF_INSIGHT = `위 데이터를 보고 현금흐름(CF) 페이지의 insight를 다음 JSON으로 출력하세요. 절대 다른 필드명(title, summary 등) 사용 금지 — 정확히 이 구조 그대로:
 

@@ -235,8 +235,12 @@ export interface CategoryNarrative {
 
 export interface ItemNote {
   trend: string;                             // "11.5배 증가" — 한 줄
-  learn_note: string;                        // 비전공자용 설명 (1~2 문장)
-  investment_note: string;                   // 투자/M&A 관점 (1~2 문장)
+  /** 통합 인사이트 — 비전공자 설명 + 투자·M&A 관점 (1~3 문장) */
+  insight?: string;
+  /** @deprecated legacy 분리 필드 — insight 우선, 없으면 두 필드 결합 */
+  learn_note?: string;
+  /** @deprecated legacy */
+  investment_note?: string;
 }
 
 export interface TopVerdict {

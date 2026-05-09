@@ -161,11 +161,14 @@ function buildItem<K extends string>(
   tag: string,
   values: (number | null)[],
   totals: (number | null)[],
-  itemNotes?: Record<string, { learn_note?: string; investment_note?: string }>
+  itemNotes?: Record<string, { insight?: string; learn_note?: string; investment_note?: string }>
 ): TableItem | null {
   const filled = values.filter((v): v is number => v != null).length;
   if (filled === 0) return null;
   const note = itemNotes?.[key] ?? itemNotes?.[label] ?? {};
+  // insight 우선 — 없으면 legacy learn_note + investment_note 결합
+  const insight = note.insight ??
+    [note.learn_note, note.investment_note].filter(Boolean).join(" ");
   return {
     name: label,
     tag,
@@ -174,8 +177,7 @@ function buildItem<K extends string>(
     trend: fmtTrend(values),
     share: shareOf(values, totals),
     shareLabel: undefined,
-    learn_note: note.learn_note ?? "",
-    investment_note: note.investment_note ?? "",
+    insight,
   };
 }
 
@@ -197,7 +199,7 @@ export function balanceSections(
   const bs = raw.financials.balance_sheet;
   const notes = (narrative?.item_notes?.balance ?? {}) as Record<
     string,
-    { learn_note?: string; investment_note?: string }
+    { insight?: string; learn_note?: string; investment_note?: string }
   >;
   return BS_GROUPS.map((g) => {
     const totalValues = (bs[g.totalKey] ?? []) as (number | null)[];
@@ -241,7 +243,7 @@ export function incomeSections(
   const is = raw.financials.income_statement;
   const notes = (narrative?.item_notes?.income ?? {}) as Record<
     string,
-    { learn_note?: string; investment_note?: string }
+    { insight?: string; learn_note?: string; investment_note?: string }
   >;
   const revenueArr = (is.revenue ?? []) as (number | null)[];
   return IS_GROUPS.map((g) => {
@@ -293,8 +295,7 @@ export function cashflowSections(
         trend: fmtTrend(dcf.fcf),
         share: 0,
         shareLabel: undefined,
-        learn_note: "",
-        investment_note: "",
+        insight: "",
       });
     }
     if (dcf.capex && dcf.capex.some((v) => v != null)) {
@@ -306,8 +307,7 @@ export function cashflowSections(
         trend: fmtTrend(dcf.capex),
         share: 0,
         shareLabel: undefined,
-        learn_note: "",
-        investment_note: "",
+        insight: "",
       });
     }
     if (dcf.runway_months && dcf.runway_months[lastYearIdx] != null) {

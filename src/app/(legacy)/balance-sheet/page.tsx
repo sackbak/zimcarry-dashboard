@@ -20,8 +20,7 @@ function toTableItem(item: BalanceItem): TableItem {
     trend: item.trend,
     share: item.asset_share_2025,
     shareLabel: "자산비중",
-    learn_note: item.learn_note,
-    investment_note: item.investment_note,
+    insight: [item.learn_note, item.investment_note].filter(Boolean).join(" "),
   };
 }
 

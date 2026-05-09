@@ -17,8 +17,8 @@ export type TableItem = {
   trend: string;
   share?: number;
   shareLabel?: string;
-  learn_note: string;
-  investment_note: string;
+  /** AI 인사이트 — 비전공자 설명 + 투자/M&A 관점 통합. 없으면 빈 문자열 */
+  insight: string;
 };
 
 export function ItemTableSection({
@@ -234,10 +234,9 @@ function ItemDetail({
         ]}
       />
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <NoteBox tone="blue" title="📘 학습 노트" body={item.learn_note} />
-        <NoteBox tone="amber" title="🔍 투자 관점" body={item.investment_note} />
-      </div>
+      {item.insight && (
+        <NoteBox tone="indigo" title="AI 인사이트" body={item.insight} />
+      )}
 
       <div>
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-gray-400">
@@ -273,18 +272,29 @@ function NoteBox({
   title,
   body,
 }: {
-  tone: "blue" | "amber";
+  tone: "blue" | "amber" | "indigo";
   title: string;
   body: string;
 }) {
   const cls =
     tone === "blue"
       ? "border-blue-100 bg-blue-50/50"
-      : "border-amber-100 bg-amber-50/50";
+      : tone === "indigo"
+        ? "border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50/40"
+        : "border-amber-100 bg-amber-50/50";
+  const titleCls = tone === "indigo" ? "text-indigo-700" : "text-gray-700";
   return (
     <div className={cn("rounded-lg border p-4", cls)}>
-      <div className="text-xs font-semibold text-gray-700">{title}</div>
-      <p className="mt-1.5 whitespace-pre-line text-xs leading-relaxed text-gray-700">
+      <div className="flex items-center gap-1.5">
+        {tone === "indigo" && (
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-500 opacity-60" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
+          </span>
+        )}
+        <div className={cn("text-xs font-bold uppercase tracking-wider", titleCls)}>{title}</div>
+      </div>
+      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-800">
         <RichText text={body} />
       </p>
     </div>
