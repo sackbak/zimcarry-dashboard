@@ -4,13 +4,11 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { generateAnalysis } from "@/app/actions";
 
-const EXPECTED_SECONDS = 45;
-/** 경과 시간에 맞춰 보여줄 단계 텍스트 — 실제 호출 단계와 정확히 매핑되진 않지만 흐름은 일치. */
+const EXPECTED_SECONDS = 40;
 const STAGES: { until: number; label: string }[] = [
-  { until: 8, label: "재무 데이터 분석 중..." },
-  { until: 18, label: "5대 카테고리 신호등 산출 중..." },
-  { until: 30, label: "BS/IS/CF 페이지 인사이트 작성 중..." },
-  { until: 42, label: "라인 아이템별 노트 생성 중..." },
+  { until: 5, label: "재무 데이터 로딩 중..." },
+  { until: 20, label: "1단계 — 종합 진단 · 5대 카테고리 생성 중..." },
+  { until: 35, label: "2단계 — 탭별 심층 인사이트 작성 중..." },
   { until: Infinity, label: "마무리 정리 중..." },
 ];
 
