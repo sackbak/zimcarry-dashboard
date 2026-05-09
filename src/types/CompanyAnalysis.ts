@@ -266,6 +266,7 @@ export interface CompanyNarrative {
     balance_sheet?: PageNarrative;
     income_statement?: PageNarrative;
     cash_flow?: PageNarrative;
+    investment?: PageNarrative;
   };
   item_notes?: {
     income: Record<string, ItemNote>;

@@ -9,6 +9,8 @@ import { loadAnalysis, listAvailableCompanies } from "@/lib/load-analysis";
 import { computeVCMetrics } from "@/lib/vc";
 import { computeValuation } from "@/lib/valuation";
 import { TrendChart } from "@/components/TrendChart";
+import { HeadVerdict } from "@/components/HeadVerdict";
+import { AIGenerateButton } from "@/components/GenerateNarrativeButton";
 import {
   CapitalEfficiencyCard,
   BepCard,
@@ -41,11 +43,13 @@ export default async function InvestmentPage({
   } catch {
     notFound();
   }
-  const { raw, computed } = analysis;
+  const { raw, computed, narrative } = analysis;
   const vc = computeVCMetrics(raw, computed);
   const valuation = computeValuation(raw, computed);
   const years = raw.meta.fiscal_years;
+  const lastIdx = years.length - 1;
   const lastYear = years.at(-1);
+  const investmentInsight = narrative?.pages?.investment;
 
   return (
     <div className="space-y-8">
@@ -58,9 +62,36 @@ export default async function InvestmentPage({
         </h1>
         <p className="mt-1 text-xs text-gray-500">
           M&A·VC 관점 — 밸류에이션 / 자본효율 / Burn / BEP / 청산가치. 카드 클릭 시
-          정의·계산식·해석. 모두 결정적 계산, AI 분석 안 들어감.
+          정의·계산식·해석.
         </p>
       </header>
+
+      {investmentInsight?.headline ? (
+        <HeadVerdict
+          topic="투자관점"
+          status="VC/M&A 시각"
+          signal={narrative?.top_verdict?.signal ?? "yellow"}
+          headline={investmentInsight.headline}
+          message={investmentInsight.message}
+          asOfNote={`${raw.meta.report_date} 기준 / ${years[lastIdx]} 결산`}
+          insight={investmentInsight.insight}
+        />
+      ) : (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                Lite mode
+              </span>
+              <p className="text-sm text-gray-800">
+                밸류에이션·BEP·Runway·청산가치 결정적 계산은 아래에 항상 표시됩니다.
+                AI 인사이트를 생성하면 VC/M&A 담당자 시각의 Bull/Bear 시나리오·딜 구조 아이디어·DD 핵심 점검 항목이 추가됩니다.
+              </p>
+            </div>
+            <AIGenerateButton id={corp_code} tab="investment" variant="compact" />
+          </div>
+        </div>
+      )}
 
       {/* 밸류에이션 — M&A 가격 협상 시작점 */}
       <section className="space-y-3">

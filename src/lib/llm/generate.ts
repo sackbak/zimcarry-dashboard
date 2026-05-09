@@ -65,3 +65,12 @@ export async function generateCFInsight(
   const r = await generateSection<PageNarrative>("cf_insight", raw, computed, { verbose });
   return r.data;
 }
+
+export async function generateInvestmentInsight(
+  raw: RawCompanyData,
+  computed: ComputedMetrics,
+  verbose = false
+): Promise<PageNarrative> {
+  const r = await generateSection<PageNarrative>("investment_insight", raw, computed, { verbose });
+  return r.data;
+}

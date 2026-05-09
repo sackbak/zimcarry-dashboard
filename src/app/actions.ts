@@ -23,6 +23,7 @@ import {
   generateBSInsight,
   generateISInsight,
   generateCFInsight,
+  generateInvestmentInsight,
 } from "@/lib/llm/generate";
 import { extractFromFile, slugify } from "@/lib/extract/extract";
 import { computeMetrics } from "@/lib/computed";
@@ -152,7 +153,7 @@ export async function generateDashboardAction(formData: FormData): Promise<void>
 
 async function generateTabAction(
   formData: FormData,
-  tab: "balance_sheet" | "income_statement" | "cash_flow"
+  tab: "balance_sheet" | "income_statement" | "cash_flow" | "investment"
 ): Promise<void> {
   const id = String(formData.get("id") ?? "").trim();
   if (!id) redirect("/?error=missing-id");
@@ -178,8 +179,10 @@ async function generateTabAction(
       itemNotes = r.item_notes;
       const { item_notes: _omit, ...rest } = r;
       pageNarrative = rest;
-    } else {
+    } else if (tab === "cash_flow") {
       pageNarrative = await generateCFInsight(analysis.raw, analysis.computed);
+    } else {
+      pageNarrative = await generateInvestmentInsight(analysis.raw, analysis.computed);
     }
     const existing = await loadExistingNarrative(id);
     const existingItems = existing.item_notes ?? { income: {}, balance: {} };
@@ -209,4 +212,7 @@ export async function generateISAction(formData: FormData) {
 }
 export async function generateCFAction(formData: FormData) {
   return generateTabAction(formData, "cash_flow");
+}
+export async function generateInvestmentAction(formData: FormData) {
+  return generateTabAction(formData, "investment");
 }

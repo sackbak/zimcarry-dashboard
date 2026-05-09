@@ -7,15 +7,17 @@ import {
   generateBSAction,
   generateISAction,
   generateCFAction,
+  generateInvestmentAction,
 } from "@/app/actions";
 
-type Tab = "dashboard" | "balance_sheet" | "income_statement" | "cash_flow";
+type Tab = "dashboard" | "balance_sheet" | "income_statement" | "cash_flow" | "investment";
 
 const ACTION_MAP: Record<Tab, (fd: FormData) => Promise<void>> = {
   dashboard: generateDashboardAction,
   balance_sheet: generateBSAction,
   income_statement: generateISAction,
   cash_flow: generateCFAction,
+  investment: generateInvestmentAction,
 };
 
 const META: Record<
@@ -73,6 +75,19 @@ const META: Record<
       "CAPEX 성격 분석",
       "런웨이 산출",
       "외부자금 의존도 평가",
+    ],
+  },
+  investment: {
+    idle: "AI 투자관점 인사이트 생성",
+    cost: "약 3원 · 12-18초",
+    expected: 15,
+    topic: "투자관점",
+    phases: [
+      "자본효율·BEP 점검",
+      "Bull/Bear 시나리오 도출",
+      "VC 체크리스트 점검",
+      "딜 구조 아이디어 작성",
+      "DD 핵심 항목 정리",
     ],
   },
 };
