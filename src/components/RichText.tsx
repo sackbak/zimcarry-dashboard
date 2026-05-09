@@ -113,14 +113,15 @@ function applyTerms(
 /**
  * 마크다운 inline 처리:
  *   - **bold** 마커는 strip (텍스트만 남김 — 굵게 처리 X)
- *   - ==highlight== 는 빨강 강조 유지 (위험 신호)
- *   - 약어/한국어 핵심 지표 자동 감지 (scope 안에서 첫 등장만 Term)
+ *   - ==highlight== 는 빨강 강조 (위험·부정 신호)
+ *   - ++highlight++ 는 파랑 강조 (긍정·기회 신호)
+ *   - 약어/한국어 핵심 지표 자동 감지
  */
 export function RichText({ text }: { text: string }) {
   const scope = useContext(ScopeContext);
 
   const segments: React.ReactNode[] = [];
-  const re = /\*\*([^*]+?)\*\*|==([^=]+?)==/g;
+  const re = /\*\*([^*]+?)\*\*|==([^=]+?)==|\+\+([^+]+?)\+\+/g;
   let lastIndex = 0;
   let i = 0;
 
@@ -130,17 +131,28 @@ export function RichText({ text }: { text: string }) {
       segments.push(...applyTerms(text.slice(lastIndex, idx), scope, `s${i++}`));
     }
     if (m[1] != null) {
-      // bold 마커 — 굵게 X, plain text로
+      // bold 마커 — plain text
       segments.push(...applyTerms(m[1], scope, `b${i++}`));
     } else if (m[2] != null) {
-      // highlight — 빨강 강조 유지
+      // 부정/위험 — 빨강
       segments.push(
         <mark
-          key={`h${i++}`}
-          className="rounded bg-rose-50 px-0.5 font-medium text-rose-700"
+          key={`r${i++}`}
+          className="font-semibold text-rose-700"
           style={{ background: "transparent" }}
         >
-          {applyTerms(m[2], scope, `h${i}`)}
+          {applyTerms(m[2], scope, `r${i}`)}
+        </mark>
+      );
+    } else if (m[3] != null) {
+      // 긍정/기회 — 파랑
+      segments.push(
+        <mark
+          key={`p${i++}`}
+          className="font-semibold text-blue-700"
+          style={{ background: "transparent" }}
+        >
+          {applyTerms(m[3], scope, `p${i}`)}
         </mark>
       );
     }

@@ -16,12 +16,18 @@ import type {
   TopVerdict,
   CategoryNarrative,
   PageNarrative,
+  ItemNote,
 } from "@/types/CompanyAnalysis";
 
 export type DashboardFullResult = {
   top_verdict: TopVerdict;
   categories: CategoryNarrative[];
   dashboard: PageNarrative;
+};
+
+/** BS/IS 인사이트 생성 결과 — PageNarrative + 라인아이템별 노트 */
+export type TabInsightResult = PageNarrative & {
+  item_notes?: Record<string, ItemNote>;
 };
 
 export async function generateDashboardFull(
@@ -37,8 +43,8 @@ export async function generateBSInsight(
   raw: RawCompanyData,
   computed: ComputedMetrics,
   verbose = false
-): Promise<PageNarrative> {
-  const r = await generateSection<PageNarrative>("bs_insight", raw, computed, { verbose });
+): Promise<TabInsightResult> {
+  const r = await generateSection<TabInsightResult>("bs_insight", raw, computed, { verbose });
   return r.data;
 }
 
@@ -46,8 +52,8 @@ export async function generateISInsight(
   raw: RawCompanyData,
   computed: ComputedMetrics,
   verbose = false
-): Promise<PageNarrative> {
-  const r = await generateSection<PageNarrative>("is_insight", raw, computed, { verbose });
+): Promise<TabInsightResult> {
+  const r = await generateSection<TabInsightResult>("is_insight", raw, computed, { verbose });
   return r.data;
 }
 

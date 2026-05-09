@@ -182,13 +182,15 @@ export async function generateSection<T = unknown>(
 function sanitizeMarkup<T>(value: T): T {
   if (typeof value === "string") {
     let s: string = value;
-    // ==red==text==red== 류 HTML 태그 흉내 제거
+    // == 태그 흉내 제거
     s = s.replace(/==red==/gi, "==");
     s = s.replace(/==danger==/gi, "==");
     s = s.replace(/==warning==/gi, "==");
-    // == 가 4번 연속이면 빈 강조 → 제거
     s = s.replace(/====/g, "");
-    // ** *  마크다운 마커 제거 (텍스트는 유지)
+    // ++ 태그 흉내 제거
+    s = s.replace(/\+\+(green|positive|blue|good)\+\+/gi, "++");
+    s = s.replace(/\+\+\+\+/g, "");
+    // ** * 마크다운 마커 제거 (++/== 마커는 RichText가 처리하므로 보존)
     s = s.replace(/\*\*([^*]+)\*\*/g, "$1");
     s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "$1");
     return s as unknown as T;

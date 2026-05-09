@@ -167,17 +167,31 @@ async function generateTabAction(
 
   try {
     let pageNarrative;
+    let itemNotes: Record<string, import("@/types/CompanyAnalysis").ItemNote> | undefined;
     if (tab === "balance_sheet") {
-      pageNarrative = await generateBSInsight(analysis.raw, analysis.computed);
+      const r = await generateBSInsight(analysis.raw, analysis.computed);
+      itemNotes = r.item_notes;
+      const { item_notes: _omit, ...rest } = r;
+      pageNarrative = rest;
     } else if (tab === "income_statement") {
-      pageNarrative = await generateISInsight(analysis.raw, analysis.computed);
+      const r = await generateISInsight(analysis.raw, analysis.computed);
+      itemNotes = r.item_notes;
+      const { item_notes: _omit, ...rest } = r;
+      pageNarrative = rest;
     } else {
       pageNarrative = await generateCFInsight(analysis.raw, analysis.computed);
     }
     const existing = await loadExistingNarrative(id);
+    const existingItems = existing.item_notes ?? { income: {}, balance: {} };
     const merged: CompanyNarrative = {
       ...existing,
       pages: { ...existing.pages, [tab]: pageNarrative },
+      item_notes: itemNotes
+        ? {
+            income: tab === "income_statement" ? itemNotes : existingItems.income,
+            balance: tab === "balance_sheet" ? itemNotes : existingItems.balance,
+          }
+        : existing.item_notes,
     };
     await saveNarrative(id, merged);
   } catch (e) {
