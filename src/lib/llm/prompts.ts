@@ -342,32 +342,58 @@ CF 페이지 강조점:
 - Runway, 이자보상배율
 - 외부 자금 의존도 (누적 FCF vs 누적 투자유치)`;
 
-export const PROMPT_INVESTMENT_INSIGHT = `위 데이터를 보고 투자관점(VC/M&A) 페이지의 insight를 다음 JSON으로 출력하세요.
+export const PROMPT_INVESTMENT_INSIGHT = `위 데이터를 보고 투자관점(M&A·PE·전략적 투자자) 페이지의 insight를 다음 JSON으로 출력하세요.
 
 {
-  "headline": "<1줄 VC/M&A 시각 핵심 테마. 부정 ==감싸기==, 긍정 ++감싸기++. 80자 이내>",
-  "message": "<1~2문장. 회사를 처음 보는 GP/딜 담당이 30초에 이해할 한 줄 평>",
+  "headline": "<1줄, IC(투자심의위원회)에 한 마디로 보고할 핵심. 부정 ==감싸기==, 긍정 ++감싸기++. 80자 이내>",
+  "message": "<1~2문장. GP/딜 담당이 30초에 결정 방향 잡을 요약. 매수/패스/숙고 어느 톤인지 분명히>",
   "insight": {
-    "conclusion": "<1~2문장. 이 회사를 살 것인가 패스할 것인가 + 왜>",
-    "evidence": ["<3~4개. 자본효율·BEP·런웨이·청산가치 중 가장 결정적인 숫자 + 의미>"],
-    "reasoning": "<2~3문장. 왜 이 숫자가 이 결론을 도출하는지 인과관계>",
-    "accounting": ["<2~3개 'VC 체크리스트' — 미공시 우려·자본화 의심·운전자본 함정 등>"],
-    "mna": ["<2~3개 '딜 구조 아이디어' — earnout·우선주·vesting·valuation 협상 포인트>"],
-    "monitoring": ["<2~3개 'DD 핵심 점검' — 다음 7일 안에 확인할 자료/지표/주석>"]
+    "conclusion": "<2~3문장 통합 결론. (1) 이 딜의 핵심 thesis 한 줄 (2) 가장 큰 리스크 한 줄 (3) 권고 (Pursue/Pass/Conditional Pursue) + 조건>",
+    "evidence": [
+      "<4~5개. 다음 카테고리에서 골고루 (반드시 구체 숫자 포함):>",
+      "<① 밸류에이션 멀티플 (EV/EBITDA, EV/Sales 추정 — computed.derived_cf.ebitda 활용)>",
+      "<② 자본효율 (ROIC·자산회전율·1원당 매출)>",
+      "<③ 현금창출력 (FCF 마진·OCF 품질·운전자본 흡수)>",
+      "<④ 안정성/유동성 (런웨이·이자보상·자본잠식 이력)>",
+      "<⑤ 성장 트랙 (CAGR·BEP 거리·매출 변곡점)>"
+    ],
+    "reasoning": "<2~3문장. Bull thesis 한 줄 + Bear risk 한 줄 + 어느 쪽이 우세한지 데이터로 판단>",
+    "accounting": [
+      "<2~3개 'Quality of Earnings 점검 항목' — M&A DD 회계 관전 포인트:>",
+      "<예: '영업이익 vs OCF 괴리 — 운전자본 흡수 N억으로 진성 이익 ↓'>",
+      "<예: '무형자산 자본화 비중 N% — 비용 처리 시 영업이익 N억 감소'>",
+      "<예: '특수관계자 거래·이연수익 주석 확인 필요'>"
+    ],
+    "mna": [
+      "<2~3개 '딜 구조·협상 포인트' — 인수자 시각:>",
+      "<예: 'EV/EBITDA 5~7x 범위 → 인수가 N억~N억 적정. 현 자본총계 N억 대비 Premium N%'>",
+      "<예: 'Earnout 구조 추천 — 매출 감소 리스크 hedge, 향후 2년 EBITDA 기준 N% 분할'>",
+      "<예: '운전자본 normalization clause 필수 — 매출채권 비정상 증가 N억'>",
+      "<예: 'Walk-away 시그널: ==이자보상 N배율 미만이거나 자본잠식 재발 시=='>"
+    ],
+    "monitoring": [
+      "<2~3개 'DD 7일 작업 리스트' — 구체 액션:>",
+      "<예: '사업보고서 주석 N번에서 단기차입금 만기 구조 확인 (롤오버 리스크)'>",
+      "<예: '특수관계자 거래 명세서에서 매출 N% 비중·가격 정상성 검증'>",
+      "<예: '주요 경영진·핵심 인력 lock-up 가능성 체크'>"
+    ]
   }
 }
 
-투자관점 페이지 강조점:
-- 투자 thesis (Bull case / Bear case 핵심 한 줄씩)
-- 자본효율 (1원의 자본으로 얼마나 매출/이익 만드는가)
-- BEP 거리 (얼마 더 burn해야 흑자 도달)
-- 런웨이 (자력생존 여유 시간)
-- 청산가치 vs 협상가 (downside 한도)
-- Asset-light 여부 (CAPEX 의존 vs 운영 레버리지)
+투자관점 핵심 평가 축:
+- **Bull thesis**: 무엇이 잘 풀리면 IRR 25%+ 가능한가
+- **Bear risk**: 무엇이 깨지면 본전도 못 건지는가
+- **Walk-away threshold**: 어떤 발견 시 즉시 패스
+- **자본효율**: 1원 투입 대비 산출 (ROIC)
+- **현금 품질**: 장부이익 vs 실제 현금 (OCF/EBITDA, FCF/Net Income)
+- **레버리지 여력**: LBO 시 추가 부채 감당 가능성
+- **밸류에이션 범위**: EV/EBITDA × EBITDA, NAV, 청산가치 삼각측량
 
-데이터 정확성:
-- valuation·burn·runway는 결정적 계산 결과(computed)에 있음. 추측 금지.
-- "투자 가치 있다" 같은 막연한 표현 금지. 구체 숫자로 근거.`;
+데이터 정확성 (절대):
+- valuation·burn·runway·EBITDA·FCF는 computed에 결정적 계산값이 이미 있음. 그대로 인용.
+- "투자 가치 있다" 같은 막연한 표현 금지. 항상 구체 숫자·범위·기준 명시.
+- Bull/Bear 둘 다 데이터로 뒷받침되는 시나리오만 작성.
+- 주가 데이터 없으므로 P/E·시가총액 언급 금지. EV/EBITDA·EV/Sales는 EBITDA·매출 기반 추정 멀티플 범위로만 표현.`;
 
 export const SECTION_PROMPTS = {
   dashboard_full: PROMPT_DASHBOARD_FULL,

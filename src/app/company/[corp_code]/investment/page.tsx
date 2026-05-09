@@ -11,6 +11,9 @@ import { computeValuation } from "@/lib/valuation";
 import { TrendChart } from "@/components/TrendChart";
 import { HeadVerdict } from "@/components/HeadVerdict";
 import { AIGenerateButton } from "@/components/GenerateNarrativeButton";
+import { FCFBridge } from "@/components/FCFBridge";
+import { CapitalStructureEvolution } from "@/components/CapitalStructureEvolution";
+import { CashConversionCycle } from "@/components/CashConversionCycle";
 import {
   CapitalEfficiencyCard,
   BepCard,
@@ -93,26 +96,56 @@ export default async function InvestmentPage({
         </div>
       )}
 
-      {/* 밸류에이션 — M&A 가격 협상 시작점 */}
+      {/* ── 1. 밸류에이션 ── */}
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-gray-900">
           밸류에이션 추정
           <span className="ml-2 text-xs font-normal text-gray-400">
-            EV/EBITDA + EV/Sales 기반
+            EV/EBITDA + EV/Sales · 시장 멀티플 (KRX 주가 데이터 연동 예정)
           </span>
         </h2>
         <ValuationCard valuation={valuation} />
       </section>
 
-      {/* Hero — 자본 효율성 + BEP 도달 */}
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <CapitalEfficiencyCard vc={vc} />
-        <BepCard vc={vc} lastYear={lastYear ?? null} />
+      {/* ── 2. FCF Bridge — Quality of Earnings (NEW) ── */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">
+          이익 품질 분해
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            영업이익 → EBITDA → OCF → FCF · M&A DD 핵심
+          </span>
+        </h2>
+        <FCFBridge raw={raw} computed={computed} />
       </section>
 
-      {/* Burn 3-set */}
+      {/* ── 3. 자본구조 진화 (NEW) ── */}
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-900">Burn 분석</h2>
+        <h2 className="text-base font-semibold text-gray-900">
+          자본구조 추이
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            5년 동안 무엇으로 성장했는가 — 부채·증자·자력 적립
+          </span>
+        </h2>
+        <CapitalStructureEvolution raw={raw} />
+      </section>
+
+      {/* ── 4. 자본 효율 + BEP ── */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">자본 효율 · BEP 거리</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <CapitalEfficiencyCard vc={vc} />
+          <BepCard vc={vc} lastYear={lastYear ?? null} />
+        </div>
+      </section>
+
+      {/* ── 5. 운전자본 효율 (NEW: CCC) ── */}
+      <section className="space-y-3">
+        <CashConversionCycle raw={raw} computed={computed} />
+      </section>
+
+      {/* ── 6. Burn / Runway / Multiple ── */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">Burn · Runway 분석</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <BurnCard vc={vc} />
           <RunwayCard vc={vc} />
@@ -120,24 +153,31 @@ export default async function InvestmentPage({
         </div>
       </section>
 
-      {/* 청산가치 */}
+      {/* ── 7. Downside: 청산가치 ── */}
       <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-900">청산가치</h2>
+        <h2 className="text-base font-semibold text-gray-900">
+          청산가치 · Downside 시나리오
+        </h2>
         <LiquidationCard vc={vc} />
       </section>
 
-      {/* Asset-light + Capital history */}
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <AssetLightCard vc={vc} />
-        <CapitalHistoryCard vc={vc} years={years} />
+      {/* ── 8. 자산 구조 + 투자 라운드 ── */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">자산 구조 · 투자 라운드</h2>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <AssetLightCard vc={vc} />
+          <CapitalHistoryCard vc={vc} years={years} />
+        </div>
       </section>
 
-      <section>
-        <h2 className="text-base font-semibold text-gray-900">매출 vs OpEx vs FCF</h2>
-        <p className="mb-3 text-xs text-gray-500">
-          영업 레버리지 — 매출 증가율이 비용 증가율을 앞서면 BEP 가시화. FCF가 음수에서
-          0에 수렴하면 자력 생존 단계 진입.
-        </p>
+      {/* ── 9. 운영 레버리지 추이 ── */}
+      <section className="space-y-3">
+        <h2 className="text-base font-semibold text-gray-900">
+          매출 · 비용 · FCF 추이
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            매출 증가율이 비용 증가율을 앞서면 BEP 가시화
+          </span>
+        </h2>
         <TrendChart
           years={years}
           series={[
@@ -165,6 +205,14 @@ export default async function InvestmentPage({
             },
           ]}
         />
+      </section>
+
+      {/* ── Disclaimer ── */}
+      <section className="rounded-lg border border-gray-200 bg-gray-50/50 p-4 text-[11px] leading-relaxed text-gray-600">
+        <span className="font-semibold text-gray-800">데이터 한계 ·</span>{" "}
+        주가 데이터 연동 전이라 P/E·시가총액·실 거래 EV는 계산 안 됨.
+        EV/EBITDA·EV/Sales 추정은 EBITDA·매출 기반 멀티플 범위로만 표시.
+        WACC 가정값 기반 DCF는 참고용. peer 비교는 KRX 데이터 연동 후 추가 예정.
       </section>
     </div>
   );
