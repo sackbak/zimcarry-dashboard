@@ -65,7 +65,7 @@ export default async function CashFlowPage({
         </h1>
       </header>
 
-      {narrative?.pages?.cash_flow ? (
+      {narrative?.pages?.cash_flow?.headline ? (
         <HeadVerdict
           topic="현금흐름"
           status={cashCat?.summary.replace(/^[^\s]+\s/, "") ?? "AI 분석"}

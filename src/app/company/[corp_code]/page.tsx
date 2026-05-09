@@ -76,6 +76,13 @@ export default async function CompanyDashboard({
   const lastYear = years[lastIdx];
   const fcfSeries = computed.derived_cf?.fcf ?? [];
 
+  // 실제 컨텐츠가 채워진 narrative만 AI 섹션 활성 — 빈 stub pages 무시
+  const hasDashboardAI = !!(
+    narrative?.top_verdict?.summary &&
+    narrative.categories?.length &&
+    narrative.pages?.dashboard?.headline
+  );
+
   return (
     <div>
       {error && (
@@ -85,7 +92,7 @@ export default async function CompanyDashboard({
         </div>
       )}
 
-      {narrative?.top_verdict && narrative.categories && narrative.pages?.dashboard ? (
+      {hasDashboardAI && narrative?.top_verdict && narrative.categories && narrative.pages?.dashboard ? (
         <>
           {/* ── AI 분석 활성 — 라이트 프리미엄 히어로 ── */}
           <div className="-mx-4 md:-mx-8 ai-active-bg">

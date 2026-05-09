@@ -167,7 +167,7 @@ export default async function IncomeStatementPage({
         </h1>
       </header>
 
-      {narrative?.pages?.income_statement ? (
+      {narrative?.pages?.income_statement?.headline ? (
         <HeadVerdict
           topic="수익성"
           status={profit?.summary.replace(/^[^\s]+\s/, "") ?? "AI 분석"}

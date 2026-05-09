@@ -65,7 +65,7 @@ export default async function BalanceSheetPage({
         </h1>
       </header>
 
-      {narrative?.pages?.balance_sheet ? (
+      {narrative?.pages?.balance_sheet?.headline ? (
         <HeadVerdict
           topic="재무 안정성"
           status={stab?.summary.replace(/^[^\s]+\s/, "") ?? "AI 분석"}
