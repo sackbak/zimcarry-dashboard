@@ -16,6 +16,27 @@ import { lookup } from "@/lib/glossary";
 import type { ComputedTopKpi } from "@/types/CompanyAnalysis";
 import type { Signal } from "@/lib/data";
 
+/**
+ * KPI label → direction.
+ *   "lower"  = 값이 낮을수록 좋음 (부채비율↓, 매출채권회수기간↓ 등)
+ *   "higher" = 값이 높을수록 좋음 (default)
+ *
+ * 이 정보로 YoY 색상을 결정 — 낮을수록 좋은 지표는 -YoY가 긍정(파랑/녹색).
+ */
+const LOWER_IS_BETTER: ReadonlySet<string> = new Set([
+  "부채비율",
+  "매출채권 회수기간",
+  "매출채권회수기간",
+  "재고일수",
+  "DSO",
+  "차입의존도",
+  "단기차입금 비중",
+]);
+
+function isLowerBetter(label: string): boolean {
+  return LOWER_IS_BETTER.has(label);
+}
+
 export type KpiSeriesKind = "percent" | "month" | "day" | "ratio_x" | "raw";
 
 type Props = {
@@ -75,12 +96,17 @@ export function DashboardKpiCard({ kpi, years, series, seriesKind = "raw", color
 
   const display = formatValue(kpi);
   const yoy = kpi.yoy;
-  const isPositive = yoy != null && yoy > 0;
-  const isNegative = yoy != null && yoy < 0;
-  const Arrow = isPositive ? ArrowUpRight : isNegative ? ArrowDownRight : Minus;
-  const arrowClass = isPositive
+  const lowerBetter = isLowerBetter(kpi.label);
+  const isUp = yoy != null && yoy > 0;
+  const isDown = yoy != null && yoy < 0;
+  // 방향 화살표는 실제 변화 방향 (값 자체)
+  const Arrow = isUp ? ArrowUpRight : isDown ? ArrowDownRight : Minus;
+  // 색상은 좋아졌는지/나빠졌는지 — lower-is-better 지표는 반전
+  const isImproving = lowerBetter ? isDown : isUp;
+  const isWorsening = lowerBetter ? isUp : isDown;
+  const arrowClass = isImproving
     ? "text-emerald-600"
-    : isNegative
+    : isWorsening
       ? "text-rose-600"
       : "text-gray-400";
 
@@ -158,9 +184,9 @@ export function DashboardKpiCard({ kpi, years, series, seriesKind = "raw", color
                   <span
                     className={cn(
                       "text-xs font-semibold",
-                      isPositive
+                      isImproving
                         ? "text-emerald-600"
-                        : isNegative
+                        : isWorsening
                           ? "text-rose-600"
                           : "text-gray-500"
                     )}
