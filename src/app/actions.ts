@@ -120,16 +120,19 @@ async function saveNarrative(id: string, narrative: CompanyNarrative): Promise<v
   revalidatePath(`/company/${id}`, "layout");
 }
 
-/** 대시보드: top_verdict + 5카테고리 + dashboard insight 한 번에 생성 */
-export async function generateDashboard(
-  id: string
-): Promise<{ ok: boolean; error?: string }> {
+/** 대시보드: top_verdict + 5카테고리 + dashboard insight 한 번에 생성 (form action) */
+export async function generateDashboardAction(formData: FormData): Promise<void> {
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) redirect("/?error=missing-id");
+
   let analysis;
   try {
     analysis = await loadAnalysis(id);
   } catch (e) {
-    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
+    const msg = (e instanceof Error ? e.message : String(e)).slice(0, 200);
+    redirect(`/company/${id}?error=${encodeURIComponent(msg)}`);
   }
+
   try {
     const result = await generateDashboardFull(analysis.raw, analysis.computed);
     const existing = await loadExistingNarrative(id);
@@ -140,22 +143,28 @@ export async function generateDashboard(
       pages: { ...existing.pages, dashboard: result.dashboard },
     };
     await saveNarrative(id, merged);
-    return { ok: true };
   } catch (e) {
-    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
+    if (e instanceof Error && e.message.startsWith("NEXT_REDIRECT")) throw e;
+    const msg = (e instanceof Error ? e.message : String(e)).slice(0, 200);
+    redirect(`/company/${id}?error=${encodeURIComponent(`대시보드 생성 실패: ${msg}`)}`);
   }
 }
 
-async function generateTabAnalysis(
-  id: string,
+async function generateTabAction(
+  formData: FormData,
   tab: "balance_sheet" | "income_statement" | "cash_flow"
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<void> {
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) redirect("/?error=missing-id");
+
   let analysis;
   try {
     analysis = await loadAnalysis(id);
   } catch (e) {
-    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
+    const msg = (e instanceof Error ? e.message : String(e)).slice(0, 200);
+    redirect(`/company/${id}?error=${encodeURIComponent(msg)}`);
   }
+
   try {
     let pageNarrative;
     if (tab === "balance_sheet") {
@@ -171,18 +180,19 @@ async function generateTabAnalysis(
       pages: { ...existing.pages, [tab]: pageNarrative },
     };
     await saveNarrative(id, merged);
-    return { ok: true };
   } catch (e) {
-    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
+    if (e instanceof Error && e.message.startsWith("NEXT_REDIRECT")) throw e;
+    const msg = (e instanceof Error ? e.message : String(e)).slice(0, 200);
+    redirect(`/company/${id}?error=${encodeURIComponent(`${tab} 생성 실패: ${msg}`)}`);
   }
 }
 
-export async function generateBSAnalysis(id: string) {
-  return generateTabAnalysis(id, "balance_sheet");
+export async function generateBSAction(formData: FormData) {
+  return generateTabAction(formData, "balance_sheet");
 }
-export async function generateISAnalysis(id: string) {
-  return generateTabAnalysis(id, "income_statement");
+export async function generateISAction(formData: FormData) {
+  return generateTabAction(formData, "income_statement");
 }
-export async function generateCFAnalysis(id: string) {
-  return generateTabAnalysis(id, "cash_flow");
+export async function generateCFAction(formData: FormData) {
+  return generateTabAction(formData, "cash_flow");
 }

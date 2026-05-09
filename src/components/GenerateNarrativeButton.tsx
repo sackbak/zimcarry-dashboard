@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 import {
-  generateDashboard,
-  generateBSAnalysis,
-  generateISAnalysis,
-  generateCFAnalysis,
+  generateDashboardAction,
+  generateBSAction,
+  generateISAction,
+  generateCFAction,
 } from "@/app/actions";
 
 type Tab = "dashboard" | "balance_sheet" | "income_statement" | "cash_flow";
 
-const ACTIONS: Record<Tab, (id: string) => Promise<{ ok: boolean; error?: string }>> = {
-  dashboard: generateDashboard,
-  balance_sheet: generateBSAnalysis,
-  income_statement: generateISAnalysis,
-  cash_flow: generateCFAnalysis,
+const ACTION_MAP: Record<Tab, (fd: FormData) => Promise<void>> = {
+  dashboard: generateDashboardAction,
+  balance_sheet: generateBSAction,
+  income_statement: generateISAction,
+  cash_flow: generateCFAction,
 };
 
 const META: Record<
@@ -86,117 +86,98 @@ export function AIGenerateButton({
   tab: Tab;
   variant?: "amber" | "compact";
 }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const action = ACTION_MAP[tab];
+  return (
+    <form action={action}>
+      <input type="hidden" name="id" value={id} />
+      <ButtonInner tab={tab} variant={variant} />
+    </form>
+  );
+}
+
+function ButtonInner({ tab, variant }: { tab: Tab; variant: "amber" | "compact" }) {
+  const { pending } = useFormStatus();
   const [elapsed, setElapsed] = useState(0);
-  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (!pending) {
+      setElapsed(0);
+      return;
+    }
+    const start = Date.now();
+    const id = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [pending]);
 
   const meta = META[tab];
-
-  async function handleClick() {
-    if (busy) return;
-    setErrorMsg("");
-    setElapsed(0);
-    setBusy(true);
-
-    const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
-
-    try {
-      const result = await ACTIONS[tab](id);
-      if (!result.ok) {
-        setErrorMsg(result.error ?? "생성 실패");
-      } else {
-        router.refresh();
-      }
-    } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : String(e));
-    } finally {
-      clearInterval(timer);
-      setBusy(false);
-    }
-  }
 
   return (
     <>
       {variant === "compact" ? (
-        <CompactButton onClick={handleClick} busy={busy} elapsed={elapsed} meta={meta} errorMsg={errorMsg} />
+        <CompactButton pending={pending} elapsed={elapsed} meta={meta} />
       ) : (
-        <PrimaryButton onClick={handleClick} busy={busy} elapsed={elapsed} meta={meta} errorMsg={errorMsg} />
+        <PrimaryButton pending={pending} elapsed={elapsed} meta={meta} />
       )}
-
-      {/* 분석 중 — 풀스크린 스캐닝 오버레이 */}
-      {busy && <ScanningOverlay elapsed={elapsed} meta={meta} />}
+      {pending && <ScanningOverlay elapsed={elapsed} meta={meta} />}
     </>
   );
 }
 
 function PrimaryButton({
-  onClick,
-  busy,
+  pending,
   elapsed,
   meta,
-  errorMsg,
 }: {
-  onClick: () => void;
-  busy: boolean;
+  pending: boolean;
   elapsed: number;
   meta: (typeof META)[Tab];
-  errorMsg: string;
 }) {
   return (
     <div className="flex flex-col items-end gap-1.5">
       <button
-        type="button"
-        onClick={onClick}
-        disabled={busy}
+        type="submit"
+        disabled={pending}
         className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg border border-indigo-300 bg-gradient-to-r from-indigo-500 to-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition-all enabled:hover:shadow-md enabled:hover:shadow-indigo-300 enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
       >
-        {!busy && (
+        {!pending && (
           <span className="relative inline-flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
           </span>
         )}
-        <span>{busy ? `${elapsed}초 / 약 ${meta.expected}초` : meta.idle}</span>
+        <span>{pending ? `${elapsed}초 / 약 ${meta.expected}초` : meta.idle}</span>
       </button>
       <div className="text-[11px] text-gray-500">{meta.cost}</div>
-      {errorMsg && <p className="max-w-[280px] text-right text-[11px] text-red-600">{errorMsg}</p>}
     </div>
   );
 }
 
 function CompactButton({
-  onClick,
-  busy,
+  pending,
   elapsed,
   meta,
-  errorMsg,
 }: {
-  onClick: () => void;
-  busy: boolean;
+  pending: boolean;
   elapsed: number;
   meta: (typeof META)[Tab];
-  errorMsg: string;
 }) {
   return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={busy}
-        className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all enabled:hover:border-indigo-400 enabled:hover:from-indigo-100 enabled:hover:to-blue-100 enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {!busy && (
-          <span className="relative inline-flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-500 opacity-60" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
-          </span>
-        )}
-        <span>{busy ? `분석 중 ${elapsed}s / ${meta.expected}s` : meta.idle}</span>
-        {!busy && <span className="text-[10px] font-normal text-indigo-500">{meta.cost}</span>}
-      </button>
-      {errorMsg && <p className="max-w-[280px] text-right text-[11px] text-red-600">{errorMsg}</p>}
-    </div>
+    <button
+      type="submit"
+      disabled={pending}
+      className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm transition-all enabled:hover:border-indigo-400 enabled:hover:from-indigo-100 enabled:hover:to-blue-100 enabled:hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70"
+    >
+      {!pending && (
+        <span className="relative inline-flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-500 opacity-60" />
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
+        </span>
+      )}
+      <span>{pending ? `분석 중 ${elapsed}s / ${meta.expected}s` : meta.idle}</span>
+      {!pending && <span className="text-[10px] font-normal text-indigo-500">{meta.cost}</span>}
+    </button>
   );
 }
 
@@ -207,24 +188,15 @@ function ScanningOverlay({
   elapsed: number;
   meta: (typeof META)[Tab];
 }) {
-  const [phaseIdx, setPhaseIdx] = useState(0);
-
-  useEffect(() => {
-    const phaseInterval = meta.expected / meta.phases.length;
-    const idx = Math.min(meta.phases.length - 1, Math.floor(elapsed / phaseInterval));
-    setPhaseIdx(idx);
-  }, [elapsed, meta]);
-
+  const phaseInterval = meta.expected / meta.phases.length;
+  const phaseIdx = Math.min(meta.phases.length - 1, Math.floor(elapsed / phaseInterval));
   const pct = Math.min(95, (elapsed / meta.expected) * 100);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-      {/* 스캔 라인 */}
       <div className="scan-line absolute inset-0" />
 
-      {/* 중앙 카드 */}
       <div className="ai-reveal relative mx-4 w-full max-w-md rounded-2xl border border-indigo-200 bg-white p-7 shadow-2xl shadow-indigo-200/50">
-        {/* 상단 그라데이션 바 */}
         <div className="absolute inset-x-0 top-0 h-1 overflow-hidden rounded-t-2xl">
           <div
             className="h-full bg-gradient-to-r from-indigo-500 via-blue-500 to-indigo-500 transition-[width] duration-700 ease-linear"
@@ -233,7 +205,6 @@ function ScanningOverlay({
         </div>
 
         <div className="space-y-5">
-          {/* 헤더 */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="relative flex h-2.5 w-2.5">
@@ -249,7 +220,6 @@ function ScanningOverlay({
             </span>
           </div>
 
-          {/* 토픽 */}
           <div>
             <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
               {meta.topic}
@@ -259,15 +229,11 @@ function ScanningOverlay({
             </h3>
           </div>
 
-          {/* 단계 리스트 */}
           <ul className="space-y-1.5">
             {meta.phases.map((phase, i) => {
               const status = i < phaseIdx ? "done" : i === phaseIdx ? "active" : "pending";
               return (
-                <li
-                  key={phase}
-                  className="flex items-center gap-2.5 text-[13px]"
-                >
+                <li key={phase} className="flex items-center gap-2.5 text-[13px]">
                   <span
                     className={
                       status === "done"
