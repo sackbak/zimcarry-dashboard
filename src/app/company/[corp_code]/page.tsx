@@ -108,9 +108,12 @@ export default async function CompanyDashboard({
                   )}
                 </div>
                 <div className="shrink-0 pt-1">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/60">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    AI 정밀 분석
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-emerald-400">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                      <span className="relative h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    </span>
+                    AI 정밀 분석 · 유료
                   </span>
                   <div className="mt-1 text-right text-[11px] text-gray-600">
                     {raw.meta.report_date} 기준
@@ -320,16 +323,15 @@ function LiteHeader({
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-white px-2 py-0.5 text-[11px] font-medium text-amber-800">
-            ⚡ Lite mode
+            Lite mode
           </span>
           <p className="text-sm leading-relaxed text-gray-800">
-            결정적 지표(차트·KPI·비율·신호등)만 표시되고 있습니다. AI
-            서술형 정밀 분석(종합 진단·시나리오·5대 카테고리 코멘트·페이지별
-            insight)이 필요하면 오른쪽 버튼을 누르세요.
+            지금은 신호등·차트·KPI만 표시됩니다. AI 분석을 실행하면
+            종합 진단·5대 카테고리 코멘트·시나리오·탭별 심층 인사이트가 추가됩니다.
           </p>
           <p className="text-[11px] text-gray-500">
-            ⚠ 회사당 약 30원 (Gemini 2.5 Flash) · 7개 호출 동시 ·
-            약 30~60초 소요 · {years.length}개년 ({years[0]}~{years.at(-1)}) ·{" "}
+            Gemini 2.5 Flash 유료 API · 2단계 순차 생성 · 약 35~45초 소요 ·
+            회사당 약 10원 · {years.length}개년 ({years[0]}~{years.at(-1)}) ·{" "}
             {reportDate} 기준 · <span className="font-mono">{corpCode}</span>
           </p>
         </div>
