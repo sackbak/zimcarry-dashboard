@@ -127,10 +127,10 @@ export default async function CompanyDashboard({
                   topic="종합"
                   status={narrative.top_verdict.label.replace(/^[^\s]+\s/, "")}
                   signal={narrative.top_verdict.signal}
-                  headline={narrative.pages.dashboard.headline}
-                  message={narrative.pages.dashboard.message}
+                  headline={narrative.partial ? narrative.top_verdict.summary.split('. ')[0] : narrative.pages.dashboard.headline}
+                  message={narrative.partial ? narrative.top_verdict.summary : narrative.pages.dashboard.message}
                   asOfNote={`${years.length}개년 (${raw.meta.data_period ?? years[0] + "~" + lastYear})`}
-                  insight={narrative.pages.dashboard.insight}
+                  insight={narrative.partial ? undefined : narrative.pages.dashboard.insight}
                   dark
                 />
               </div>

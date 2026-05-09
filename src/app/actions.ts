@@ -19,7 +19,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { loadAnalysis } from "@/lib/load-analysis";
-import { generateNarrative } from "@/lib/llm/generate";
+import { generateMainOnly, generateInsightsOnly } from "@/lib/llm/generate";
+import type { CompanyNarrative, PageNarrative } from "@/types/CompanyAnalysis";
 import { extractFromFile, slugify } from "@/lib/extract/extract";
 import { computeMetrics } from "@/lib/computed";
 
@@ -109,38 +110,62 @@ export async function analyzeCompany(formData: FormData): Promise<void> {
   redirect(`/company/${corpCode}`);
 }
 
-export async function generateAnalysis(formData: FormData): Promise<void> {
-  const id = String(formData.get("id") ?? "").trim();
-  if (!id) redirect("/?error=missing-id");
+const STUB_PAGE: PageNarrative = {
+  headline: "",
+  message: "",
+  insight: { conclusion: "", evidence: [], reasoning: "" },
+};
 
+/** 1단계: top_verdict + categories 생성 후 partial 저장 */
+export async function generateMain(
+  id: string
+): Promise<{ ok: boolean; error?: string }> {
   let analysis;
   try {
     analysis = await loadAnalysis(id);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    redirect(`/company/${id}?error=${encodeURIComponent(msg.slice(0, 200))}`);
+    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
   }
-
   try {
-    const { narrative } = await generateNarrative(
-      analysis.raw,
-      analysis.computed,
-      { verbose: false }
-    );
+    const { result } = await generateMainOnly(analysis.raw, analysis.computed);
+    const partial: CompanyNarrative = {
+      top_verdict: result.top_verdict,
+      categories: result.categories,
+      pages: { dashboard: STUB_PAGE, balance_sheet: STUB_PAGE, income_statement: STUB_PAGE, cash_flow: STUB_PAGE },
+      partial: true,
+    };
     await mkdir(WRITE_DIR, { recursive: true });
-    await writeFile(
-      path.join(WRITE_DIR, `${id}_narrative.json`),
-      JSON.stringify(narrative, null, 2),
-      "utf8"
-    );
+    await writeFile(path.join(WRITE_DIR, `${id}_narrative.json`), JSON.stringify(partial, null, 2), "utf8");
     revalidatePath(`/company/${id}`, "layout");
+    return { ok: true };
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith("NEXT_REDIRECT")) throw e;
-    const msg = e instanceof Error ? e.message : String(e);
-    redirect(
-      `/company/${id}?error=${encodeURIComponent(`narrative 생성 실패: ${msg.slice(0, 200)}`)}`
-    );
+    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
   }
+}
 
-  redirect(`/company/${id}`);
+/** 2단계: 4개 탭 insight 생성 후 기존 narrative에 병합 저장 */
+export async function generateInsights(
+  id: string
+): Promise<{ ok: boolean; error?: string }> {
+  let analysis;
+  try {
+    analysis = await loadAnalysis(id);
+  } catch (e) {
+    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
+  }
+  if (!analysis.narrative) return { ok: false, error: "1단계 먼저 실행 필요" };
+  try {
+    const { result } = await generateInsightsOnly(analysis.raw, analysis.computed);
+    const full: CompanyNarrative = {
+      ...analysis.narrative,
+      pages: result,
+      partial: false,
+    };
+    await mkdir(WRITE_DIR, { recursive: true });
+    await writeFile(path.join(WRITE_DIR, `${id}_narrative.json`), JSON.stringify(full, null, 2), "utf8");
+    revalidatePath(`/company/${id}`, "layout");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: (e instanceof Error ? e.message : String(e)).slice(0, 200) };
+  }
 }

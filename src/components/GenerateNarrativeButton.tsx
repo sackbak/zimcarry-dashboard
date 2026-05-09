@@ -1,53 +1,75 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { generateAnalysis } from "@/app/actions";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { generateMain, generateInsights } from "@/app/actions";
 
-const EXPECTED_SECONDS = 40;
-const STAGES: { until: number; label: string }[] = [
-  { until: 5, label: "재무 데이터 로딩 중..." },
-  { until: 20, label: "1단계 — 종합 진단 · 5대 카테고리 생성 중..." },
-  { until: 35, label: "2단계 — 탭별 심층 인사이트 작성 중..." },
-  { until: Infinity, label: "마무리 정리 중..." },
-];
+type Stage = "idle" | "stage1" | "stage2" | "done" | "error";
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+const STAGE_LABEL: Record<Stage, string> = {
+  idle: "AI 분석 생성하기",
+  stage1: "1단계 — 종합 진단 · 카테고리 생성 중...",
+  stage2: "2단계 — 탭별 심층 인사이트 작성 중...",
+  done: "완료",
+  error: "다시 시도",
+};
+
+export function GenerateNarrativeButton({ id }: { id: string }) {
+  const router = useRouter();
+  const [stage, setStage] = useState<Stage>("idle");
   const [elapsed, setElapsed] = useState(0);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  useEffect(() => {
-    if (!pending) {
-      setElapsed(0);
-      return;
+  const busy = stage === "stage1" || stage === "stage2";
+
+  async function handleClick() {
+    if (busy) return;
+    setErrorMsg("");
+    setElapsed(0);
+
+    const timer = setInterval(() => setElapsed((s) => s + 1), 1000);
+
+    try {
+      setStage("stage1");
+      const r1 = await generateMain(id);
+      if (!r1.ok) { setErrorMsg(r1.error ?? "1단계 실패"); setStage("error"); return; }
+
+      router.refresh();
+
+      setStage("stage2");
+      const r2 = await generateInsights(id);
+      if (!r2.ok) { setErrorMsg(r2.error ?? "2단계 실패"); setStage("error"); return; }
+
+      router.refresh();
+      setStage("done");
+    } finally {
+      clearInterval(timer);
     }
-    const start = Date.now();
-    const id = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - start) / 1000));
-    }, 250);
-    return () => clearInterval(id);
-  }, [pending]);
+  }
 
-  const stage = STAGES.find((s) => elapsed < s.until)?.label ?? "";
-  const pct = Math.min(95, (elapsed / EXPECTED_SECONDS) * 100);
+  const pct = stage === "stage1"
+    ? Math.min(45, (elapsed / 25) * 45)
+    : stage === "stage2"
+      ? 45 + Math.min(50, (elapsed / 30) * 50)
+      : stage === "done" ? 100 : 0;
 
   return (
     <div className="flex flex-col items-end gap-1.5">
       <button
-        type="submit"
-        disabled={pending}
+        type="button"
+        onClick={handleClick}
+        disabled={busy}
         className="rounded-lg border border-amber-300 bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-900 shadow-sm transition-colors enabled:hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {pending ? (
+        {busy ? (
           <span className="inline-flex items-center gap-2">
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-amber-700 border-t-transparent" />
-            {elapsed}초 / 약 {EXPECTED_SECONDS}초
+            {elapsed}초
           </span>
-        ) : (
-          "AI 분석 생성하기"
-        )}
+        ) : STAGE_LABEL[stage]}
       </button>
-      {pending && (
+
+      {busy && (
         <div className="w-56 space-y-1">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-amber-100">
             <div
@@ -55,18 +77,13 @@ function SubmitButton() {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="text-right text-[11px] text-amber-700">{stage}</div>
+          <div className="text-right text-[11px] text-amber-700">{STAGE_LABEL[stage]}</div>
         </div>
       )}
-    </div>
-  );
-}
 
-export function GenerateNarrativeButton({ id }: { id: string }) {
-  return (
-    <form action={generateAnalysis}>
-      <input type="hidden" name="id" value={id} />
-      <SubmitButton />
-    </form>
+      {stage === "error" && errorMsg && (
+        <p className="max-w-[200px] text-right text-[11px] text-red-600">{errorMsg}</p>
+      )}
+    </div>
   );
 }

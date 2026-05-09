@@ -261,8 +261,10 @@ export interface CompanyNarrative {
     cash_flow: PageNarrative;
   };
   categories: CategoryNarrative[];
+  /** 1단계만 완료 — 탭 insight 아직 생성 중 */
+  partial?: boolean;
   item_notes?: {
-    income: Record<string, ItemNote>;        // key = line item name
+    income: Record<string, ItemNote>;
     balance: Record<string, ItemNote>;
   };
 }
