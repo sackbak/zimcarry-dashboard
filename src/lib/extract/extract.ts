@@ -208,16 +208,33 @@ export async function extractFromFile(
   };
 }
 
-/** 회사명을 URL slug으로 변환 — Korean·English·숫자만 살리고 -로 잇기. */
+/**
+ * 회사명을 URL/파일시스템 안전 slug으로 변환.
+ *
+ * Vercel /tmp 파일시스템은 한국어 이름에서 인코딩 이슈 발생 가능 →
+ * ASCII-only로 보장 (영숫자만). 한국어 회사명은 결정적 hash로 변환.
+ *
+ * 회사 표시명(raw.meta.company_name)은 한국어 그대로 보존 — slug은 ID 용도만.
+ */
 export function slugify(name: string): string {
-  const base = name
+  const asciiBase = name
     .toLowerCase()
     .trim()
     .replace(/[\s/\\]+/g, "-")
-    .replace(/[^a-z0-9가-힣\-]/g, "")
+    .replace(/[^a-z0-9\-]/g, "") // 한국어·특수문자 제거
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
-  if (base) return base;
-  // fallback — 한글 자모 분해 등 처리 어려우면 timestamp
-  return `company-${Date.now().toString(36)}`;
+
+  if (asciiBase.length >= 3) return asciiBase;
+
+  // ASCII slug 너무 짧음 (한국어 회사명) → 결정적 hash
+  // 같은 이름은 항상 같은 ID 생성 (재방문 시 같은 데이터 로드)
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+    hash |= 0;
+  }
+  const hashStr = Math.abs(hash).toString(36);
+  // 가능하면 ASCII 부분 + 해시 (디버깅·구분 용이)
+  return asciiBase ? `${asciiBase}-${hashStr}` : `co-${hashStr}`;
 }
