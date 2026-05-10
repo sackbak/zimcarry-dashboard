@@ -30,16 +30,66 @@ function getClient(): GoogleGenerativeAI {
   return _client;
 }
 
-/** Excel(xlsx/xls) 바이너리 → 모든 sheet의 TSV 표현 */
+/**
+ * Excel → 시트별 TSV. 토큰 절감을 위해 사전 필터링:
+ *   - 빈 행 제거
+ *   - 숫자가 하나도 없는 행 제거 (순수 헤더·카테고리)
+ *   - 단, 회사명·단위·연도 헤더 행은 보존 (라벨에 한글 + 숫자 패턴)
+ *
+ * 크레탑 엑셀은 시트당 100+ 행 → 50% 이하로 줄임. 추출 속도 개선.
+ */
 export function excelToText(buffer: ArrayBuffer): string {
   const wb = XLSX.read(buffer, { type: "array" });
   const blocks: string[] = [];
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
-    const tsv = XLSX.utils.sheet_to_csv(ws, { FS: "\t", blankrows: false });
+    const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false }) as unknown[][];
+    const filtered = filterRows(aoa);
+    const tsv = filtered.map((row) => row.map(cellToString).join("\t")).join("\n");
     blocks.push(`### Sheet: ${sheetName}\n${tsv}`);
   }
   return blocks.join("\n\n");
+}
+
+function cellToString(v: unknown): string {
+  if (v == null) return "";
+  if (typeof v === "string") return v;
+  if (typeof v === "number") return String(v);
+  return String(v);
+}
+
+const META_KEYWORDS = [
+  "회사명", "기업명", "상호", "법인명", "단위", "연도", "결산", "감사",
+  "company", "name", "year", "unit", "기", "fy",
+];
+
+function isMetaRow(row: unknown[]): boolean {
+  const text = row.map(cellToString).join(" ").toLowerCase();
+  return META_KEYWORDS.some((k) => text.includes(k.toLowerCase()));
+}
+
+function hasNumber(row: unknown[]): boolean {
+  for (const cell of row) {
+    if (typeof cell === "number" && Number.isFinite(cell)) return true;
+    if (typeof cell === "string") {
+      // 콤마 포함 숫자, 음수 (1,234), 마이너스 -1234 등
+      if (/-?[\d,]+(\.\d+)?/.test(cell.trim()) && /\d/.test(cell)) return true;
+    }
+  }
+  return false;
+}
+
+function filterRows(rows: unknown[][]): unknown[][] {
+  const result: unknown[][] = [];
+  for (const row of rows) {
+    if (!row || row.length === 0) continue;
+    if (row.every((c) => c == null || c === "")) continue;
+    // 메타 행 (회사명·단위·연도 헤더) 또는 숫자 있는 행만 유지
+    if (isMetaRow(row) || hasNumber(row)) {
+      result.push(row);
+    }
+  }
+  return result;
 }
 
 export type ExtractResult = {
