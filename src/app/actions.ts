@@ -26,6 +26,7 @@ import {
   generateInvestmentInsight,
 } from "@/lib/llm/generate";
 import { extractFromFile, slugify } from "@/lib/extract/extract";
+import { parseExcelToRaw } from "@/lib/extract/parse-excel";
 import { computeMetrics } from "@/lib/computed";
 import type { CompanyNarrative } from "@/types/CompanyAnalysis";
 
@@ -54,19 +55,31 @@ export async function uploadCompanyFile(formData: FormData): Promise<void> {
 
   const buffer = await file.arrayBuffer();
 
-  let extracted;
-  try {
-    extracted = await extractFromFile({
-      kind: isPdf ? "pdf" : "excel",
-      buffer,
-      filename: file.name,
-    });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    redirect(`/?error=${encodeURIComponent(`추출 실패: ${msg.slice(0, 200)}`)}`);
+  let raw;
+  if (isExcel) {
+    // 결정적 파서 — LLM 없이 100ms, 비용 0
+    try {
+      const result = parseExcelToRaw(buffer, file.name);
+      raw = result.raw;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      redirect(`/?error=${encodeURIComponent(`엑셀 파싱 실패: ${msg.slice(0, 200)}`)}`);
+    }
+  } else {
+    // PDF는 여전히 LLM 필요 (이미지 기반)
+    let extracted;
+    try {
+      extracted = await extractFromFile({
+        kind: "pdf",
+        buffer,
+        filename: file.name,
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      redirect(`/?error=${encodeURIComponent(`PDF 추출 실패: ${msg.slice(0, 200)}`)}`);
+    }
+    raw = extracted.raw;
   }
-
-  const { raw } = extracted;
   // 구체적 에러 — 무엇이 비어있는지 알려줌
   const missing: string[] = [];
   if (!raw.meta.company_name) missing.push("회사명");
