@@ -56,15 +56,40 @@ export async function uploadCompanyFile(formData: FormData): Promise<void> {
 
   let extracted;
   try {
-    extracted = await extractFromFile({ kind: isPdf ? "pdf" : "excel", buffer });
+    extracted = await extractFromFile({
+      kind: isPdf ? "pdf" : "excel",
+      buffer,
+      filename: file.name,
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     redirect(`/?error=${encodeURIComponent(`추출 실패: ${msg.slice(0, 200)}`)}`);
   }
 
   const { raw } = extracted;
-  if (!raw.meta.company_name || raw.meta.fiscal_years.length === 0) {
-    redirect(`/?error=${encodeURIComponent("회사명·연도 추출 실패. 명확한 재무 자료인지 확인 필요.")}`);
+  // 구체적 에러 — 무엇이 비어있는지 알려줌
+  const missing: string[] = [];
+  if (!raw.meta.company_name) missing.push("회사명");
+  if (raw.meta.fiscal_years.length === 0) missing.push("연도");
+  const isFin = raw.financials.income_statement.revenue?.some((v) => v != null);
+  const bsFin = raw.financials.balance_sheet.total_assets?.some((v) => v != null);
+  if (!isFin && !bsFin) missing.push("재무제표 (매출·자산 모두 없음)");
+
+  if (missing.length > 0) {
+    const detected = [
+      raw.meta.company_name && `회사명='${raw.meta.company_name}'`,
+      raw.meta.fiscal_years.length > 0 && `연도=[${raw.meta.fiscal_years.join(",")}]`,
+      isFin && "손익계산서 OK",
+      bsFin && "재무상태표 OK",
+    ]
+      .filter(Boolean)
+      .join(" / ") || "없음";
+    redirect(
+      `/?error=${encodeURIComponent(
+        `추출 실패: 누락 항목 = ${missing.join(", ")}. ` +
+          `추출된 것: ${detected}. 자료에 명시 안 되어 있을 수 있음.`
+      )}`
+    );
   }
 
   const computed = computeMetrics(raw);

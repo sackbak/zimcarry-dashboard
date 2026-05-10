@@ -59,10 +59,21 @@ export type ExtractResult = {
  *   - { kind: 'excel', buffer: ArrayBuffer } — xlsx 파일 바이너리
  *   - { kind: 'pdf', buffer: ArrayBuffer } — PDF 바이너리
  */
+/** 파일명에서 회사명 추출 — 자료 안에 회사명 없는 경우 fallback용 (크레탑 등) */
+function inferCompanyNameFromFilename(filename: string): string {
+  // .xlsx, .pdf 등 확장자 제거
+  let name = filename.replace(/\.[^.]+$/, "");
+  // 일반적인 접미사 제거
+  name = name.replace(/[_\-\s]?(재무제표|재무|financials?|statements?|cretop|크레탑|export|raw|data|2021|2022|2023|2024|2025).*$/i, "");
+  // 끝 공백·특수문자 제거
+  name = name.replace(/[\s_\-\.()]+$/, "").trim();
+  return name;
+}
+
 export async function extractFromFile(
   input:
-    | { kind: "excel"; buffer: ArrayBuffer }
-    | { kind: "pdf"; buffer: ArrayBuffer }
+    | { kind: "excel"; buffer: ArrayBuffer; filename?: string }
+    | { kind: "pdf"; buffer: ArrayBuffer; filename?: string }
 ): Promise<ExtractResult> {
   const client = getClient();
   const model = client.getGenerativeModel({
@@ -74,9 +85,17 @@ export async function extractFromFile(
     },
   });
 
+  const filenameHint = input.filename
+    ? `\n\n[파일명 힌트] 업로드된 파일명: "${input.filename}". ` +
+      `자료 안에 회사명이 없으면 파일명에서 회사명 추출 (확장자·"재무제표"·연도 등 부가어 제외). ` +
+      `추정 회사명: "${inferCompanyNameFromFilename(input.filename)}"`
+    : "";
+
+  const userPrompt = EXTRACTION_USER_PROMPT + filenameHint;
+
   const parts: Parameters<typeof model.generateContent>[0] =
     input.kind === "excel"
-      ? [{ text: excelToText(input.buffer) }, { text: EXTRACTION_USER_PROMPT }]
+      ? [{ text: excelToText(input.buffer) }, { text: userPrompt }]
       : [
           {
             inlineData: {
@@ -84,7 +103,7 @@ export async function extractFromFile(
               data: Buffer.from(input.buffer).toString("base64"),
             },
           },
-          { text: EXTRACTION_USER_PROMPT },
+          { text: userPrompt },
         ];
 
   const result = await model.generateContent(parts);
