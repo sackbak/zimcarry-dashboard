@@ -20,6 +20,11 @@ import type {
   RawBalanceSheet,
   RawCashFlow,
 } from "@/types/CompanyAnalysis";
+import {
+  IS_NAME_MAP,
+  BS_NAME_MAP,
+  CF_NAME_MAP,
+} from "@/lib/extract/account-names";
 
 // ────────────────────────────────────────────────────────────────────
 // account_id → 표준 키 매핑
@@ -49,30 +54,8 @@ const IS_MAP: Record<string, keyof RawIncomeStatement> = {
   "ifrs-full_AmortisationExpense": "amortization",
 };
 
-/** 한국어 account_nm fallback (account_id 매칭 실패 시). 공백 제거 후 매칭. */
-const IS_NAME_MAP: Record<string, keyof RawIncomeStatement> = {
-  "매출액": "revenue",
-  "수익(매출액)": "revenue",
-  "영업수익": "revenue",
-  "매출": "revenue",
-  "매출원가": "cogs",
-  "매출총이익": "gross_profit",
-  "판매비와관리비": "sga",
-  "판관비": "sga",
-  "영업이익": "operating_income",
-  "영업이익(손실)": "operating_income",
-  "영업손실": "operating_income",
-  "당기순이익": "net_income",
-  "당기순이익(손실)": "net_income",
-  "당기순손실": "net_income",
-  "연결당기순이익": "net_income", // 현대차
-  "연결당기순이익(손실)": "net_income",
-  "연결당기순손실": "net_income",
-  "계속영업연결당기순이익": "net_income",
-  "이자비용": "interest_expense",
-  "감가상각비": "depreciation",
-  "무형자산상각비": "amortization",
-};
+// IS_NAME_MAP / BS_NAME_MAP / CF_NAME_MAP은 src/lib/extract/account-names.ts에서 import
+// (DART와 엑셀 파서가 공유)
 
 const BS_MAP: Record<string, keyof RawBalanceSheet> = {
   "ifrs-full_Assets": "total_assets",
@@ -102,34 +85,6 @@ const BS_MAP: Record<string, keyof RawBalanceSheet> = {
   "ifrs-full_AdditionalPaidinCapital": "capital_surplus",
 };
 
-const BS_NAME_MAP: Record<string, keyof RawBalanceSheet> = {
-  "자산총계": "total_assets",
-  "유동자산": "current_assets",
-  "현금및현금성자산": "cash",
-  "현금밎현금성자산": "cash", // 일부 오타 케이스
-  "매출채권": "ar",
-  "매출채권및기타채권": "ar",
-  "비유동자산": "non_current",
-  "유형자산": "tangible",
-  "무형자산": "intangible",
-  "부채총계": "total_liab",
-  "유동부채": "current_liab",
-  "단기차입금": "short_borrow",
-  "유동성장기차입금": "short_borrow", // NAVER 등 — 1년 내 만기 도래 장기차입금
-  "유동성장기부채": "short_borrow",
-  "단기사채": "short_borrow",
-  "비유동부채": "non_current_liab",
-  "장기차입금": "long_borrow",
-  "사채": "long_borrow",
-  "비유동사채": "long_borrow",
-  "자본총계": "total_equity",
-  "자본금": "capital_stock",
-  "자본잉여금": "capital_surplus",
-  "주식발행초과금": "capital_surplus",
-  "자본준비금": "capital_surplus",
-  "이익잉여금": "retained_earnings",
-  "이익잉여금(결손금)": "retained_earnings",
-};
 
 const CF_MAP: Record<string, keyof RawCashFlow> = {
   "ifrs-full_CashFlowsFromUsedInOperatingActivities": "operating",
@@ -138,15 +93,6 @@ const CF_MAP: Record<string, keyof RawCashFlow> = {
   "ifrs-full_IncreaseDecreaseInCashAndCashEquivalents": "net_change",
 };
 
-const CF_NAME_MAP: Record<string, keyof RawCashFlow> = {
-  "영업활동현금흐름": "operating",
-  "영업활동으로인한현금흐름": "operating",
-  "투자활동현금흐름": "investing",
-  "투자활동으로인한현금흐름": "investing",
-  "재무활동현금흐름": "financing",
-  "재무활동으로인한현금흐름": "financing",
-  "현금및현금성자산의증가": "net_change",
-};
 
 // ────────────────────────────────────────────────────────────────────
 // 변환 헬퍼
